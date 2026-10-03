@@ -1,0 +1,7 @@
+name = "sportevo-demo-preview"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
