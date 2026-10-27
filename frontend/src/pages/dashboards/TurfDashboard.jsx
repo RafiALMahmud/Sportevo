@@ -1,496 +1,114 @@
-import { useEffect, useState } from 'react'
+import { useTranslation } from '../../i18n/useTranslation'
+import { money } from '../../utils/money'
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../api/client'
+import { useAuth } from '../../context/AuthContext'
+import { formError, withPhotos } from '../../api/forms'
+import PhotoPicker from '../../components/PhotoPicker'
+import FieldPricingInputs from '../../components/FieldPricingInputs'
+import { FieldPlayersInput } from '../../components/FieldPlayers'
+import AdvancePaymentInputs from '../../components/AdvancePaymentInputs'
+import { fieldRateLabel } from '../../utils/fieldPricing'
+import FieldGallery from '../../components/FieldGallery'
+import SportChoices from '../../components/SportChoices'
+import { getSports } from '../../api/catalog'
 import Badge from '../../components/Badge'
-import StatCard from '../../components/StatCard'
 import Spinner from '../../components/Spinner'
-import { Alert, Button, Card, Input } from '../../components/ui'
+import Seo from '../../components/Seo'
+import WorkflowPanel from '../../components/WorkflowPanel'
+import OwnerSection, { OwnerIcon } from '../../components/OwnerSection'
+import { bookingDisplayStatus } from '../../utils/bookingStatus'
+import { Alert, Button, Card, Input, Select } from '../../components/ui'
 
-function formatTime(dt) {
-  return new Date(dt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDate(dt) {
-  return new Date(dt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-}
+const emptyField = { name: '', pricing_mode: 'slot', price_per_slot: '', price_per_hour: '', sports: [], players_per_side: '' }
 
 export default function TurfDashboard() {
+  const { t, locale } = useTranslation()
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [sports, setSports] = useState([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  const [showRegister, setShowRegister] = useState(false)
-  const [registerForm, setRegisterForm] = useState({ name: '', email: '', phone: '', location: '', price_per_slot: '', sports: [] })
-  const [registerError, setRegisterError] = useState('')
-  const [registering, setRegistering] = useState(false)
   const [message, setMessage] = useState('')
-
-  const [showSlots, setShowSlots] = useState(false)
-  const [slotForm, setSlotForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    start_time: '09:00',
-    end_time: '18:00',
-    slot_duration: 60,
-  })
-  const [slotError, setSlotError] = useState('')
-  const [generating, setGenerating] = useState(false)
-
-  const [actionError, setActionError] = useState('')
-  const [editingPrice, setEditingPrice] = useState(false)
-  const [price, setPrice] = useState('')
-  const [photoFiles, setPhotoFiles] = useState(null)
-
-  useEffect(() => {
-    api
-      .get('/sports')
-      .then(({ data }) => setSports(data.sports))
-      .catch(() => {})
+  const [busy, setBusy] = useState(false)
+  const [selected, setSelected] = useState('')
+  const [fieldForm, setFieldForm] = useState(emptyField)
+  const [newField, setNewField] = useState(emptyField)
+  const [complexDraft, setComplexForm] = useState({ name: '', email: null, phone: null, location: '', field_name: 'Main field', pricing_mode: 'slot', price_per_slot: '', price_per_hour: '', sports: [], advance_enabled: true, advance_amount: 500, advance_window_minutes: 60, payment_provider: 'bKash', payment_number: '' })
+  const complexForm = { ...complexDraft, email: complexDraft.email ?? user?.email ?? '', phone: complexDraft.phone ?? user?.phone ?? '' }
+  const [photos, setPhotos] = useState([])
+  const [complexPhotos, setComplexPhotos] = useState([])
+  const [newFieldPhotos, setNewFieldPhotos] = useState([])
+  const turf = data?.turf
+  const field = turf?.fields?.find((f) => String(f.id) === String(selected))
+  const load = useCallback(async () => {
+    try {
+      const { data: result } = await api.get('/dashboard/turf')
+      setData(result)
+      setSelected((current) => result.turf?.fields.some((f) => String(f.id) === String(current)) ? current : String(result.turf?.fields[0]?.id || ''))
+    } catch (e) { if (e.response?.status === 404) setData({ turf: null }); else setError(e.response?.data?.message || 'Unable to load dashboard.') }
   }, [])
-
-  const loadDashboard = () => {
-    setLoading(true)
-    setError('')
-    api
-      .get('/dashboard/turf')
-      .then(({ data }) => setData(data))
-      .catch((e) => {
-        if (e.response?.status === 404) {
-          setData({ turf: null })
-        } else {
-          setError('Failed to load dashboard.')
-        }
-      })
-      .finally(() => setLoading(false))
+  useEffect(() => { load(); getSports().then(({ data: r }) => setSports(r.sports)).catch(() => setError('Could not load sports.')) }, [load])
+  useEffect(() => { if (field) setFieldForm({ name: field.name, pricing_mode: field.pricing_mode || 'slot', price_per_slot: field.price_per_slot, price_per_hour: field.price_per_hour ?? '', players_per_side: field.players_per_side ?? '', sports: field.sports.map((s) => s.id) }) }, [field])
+  const act = async (method, url, payload) => {
+    setBusy(true); setError(''); setMessage('')
+    try { const { data: result } = await api[method](url, payload); setMessage(result.message || 'Saved.'); await load(); getSports(true).then(({ data: catalog }) => setSports(catalog.sports)).catch(() => {}); return true }
+    catch (e) { setError(formError(e)); return false }
+    finally { setBusy(false) }
   }
-
-  useEffect(() => {
-    loadDashboard()
-  }, [])
-
-  const toggleSport = (id) => {
-    setRegisterForm((f) => ({
-      ...f,
-      sports: f.sports.includes(id) ? f.sports.filter((s) => s !== id) : [...f.sports, id],
-    }))
-  }
-
-  const handleRegisterTurf = async (e) => {
-    e.preventDefault()
-    setRegisterError('')
-    setRegistering(true)
-    try {
-      const { data } = await api.post('/turfs', registerForm)
-      setMessage(data.message)
-      setShowRegister(false)
-      setRegisterForm({ name: '', email: '', phone: '', location: '', price_per_slot: '', sports: [] })
-      loadDashboard()
-    } catch (err) {
-      const errors = err.response?.data?.errors
-      setRegisterError(
-        err.response?.data?.message || (errors ? Object.values(errors).flat()[0] : 'Registration failed.')
-      )
-    } finally {
-      setRegistering(false)
-    }
-  }
-
-  const handleGenerate = async (e) => {
-    e.preventDefault()
-    setSlotError('')
-    setGenerating(true)
-    try {
-      const { data } = await api.post(`/turfs/${data.turf.id}/slots`, slotForm)
-      setMessage(data.message)
-      setShowSlots(false)
-      loadDashboard()
-    } catch (err) {
-      const errors = err.response?.data?.errors
-      setSlotError(
-        err.response?.data?.message || (errors ? Object.values(errors).flat()[0] : 'Generation failed.')
-      )
-    } finally {
-      setGenerating(false)
-    }
-  }
-
-  const handleAccept = async (bookingId) => {
-    setActionError('')
-    try {
-      const { data } = await api.post(`/bookings/${bookingId}/accept`)
-      setMessage(data.message)
-      loadDashboard()
-    } catch (err) {
-      setActionError(err.response?.data?.message || 'Failed to accept request.')
-    }
-  }
-
-  const handleReject = async (bookingId) => {
-    setActionError('')
-    try {
-      const { data } = await api.post(`/bookings/${bookingId}/reject`)
-      setMessage(data.message)
-      loadDashboard()
-    } catch (err) {
-      setActionError(err.response?.data?.message || 'Failed to reject request.')
-    }
-  }
-
-  const handleComplete = async (bookingId) => {
-    setActionError('')
-    try {
-      await api.post(`/bookings/${bookingId}/complete`)
-      loadDashboard()
-    } catch {
-      setActionError('Failed to complete booking.')
-    }
-  }
-
-  const savePrice = async () => {
-    try { const { data: response } = await api.put('/my-turf', { price_per_slot: price }); setMessage(response.message); setEditingPrice(false); loadDashboard() }
-    catch (err) { setActionError(err.response?.data?.message || 'Could not update price.') }
-  }
-
-  const uploadPhotos = async () => {
-    if (!photoFiles?.length) return
-    const form = new FormData()
-    Array.from(photoFiles).forEach((file) => form.append('photos[]', file))
-    try { const { data: response } = await api.post(`/turfs/${data.turf.id}/photos`, form); setMessage(response.message); setPhotoFiles(null); loadDashboard() }
-    catch (err) { setActionError(err.response?.data?.message || 'Could not upload photos.') }
-  }
-
-  const deletePhoto = async (photoId) => {
-    try { await api.delete(`/turfs/${data.turf.id}/photos/${photoId}`); setMessage('Photo deleted.'); loadDashboard() }
-    catch { setActionError('Could not delete photo.') }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Spinner size="lg" />
-      </div>
-    )
-  }
-
-  if (!data || !data.turf) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-6 animate-fade-up">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Complex Dashboard</h1>
-          <p className="mt-1 text-zinc-500">You haven't registered a complex yet.</p>
+  const sportChoices = (form, setter) => <SportChoices sports={sports} form={form} onChange={setter} />
+  const fieldInputs = (form, setter) => <><Input label={t("Field / facility name")} required value={form.name} onChange={(e) => setter({ ...form, name: e.target.value })} /><FieldPlayersInput value={form.players_per_side} onChange={value => setter({ ...form, players_per_side: value })} disabled={busy} /><FieldPricingInputs form={form} onChange={setter} />{sportChoices(form, setter)}</>
+  const bookingCard = (b) => <div key={b.id} className="my-2 rounded-lg border border-zinc-800 p-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-2"><strong>{b.field?.name || t("Main field")} · {new Date(b.start_time).toLocaleString(locale)} – {new Date(b.end_time).toLocaleTimeString(locale)}</strong><Badge status={bookingDisplayStatus(b)} /></div>
+    {b.user ? <p className="my-2">{b.user.name} · {b.user.email} · {b.user.phone || t("No phone supplied")}</p> : !['available', 'unavailable'].includes(b.status) && <p className="my-2 text-zinc-400">{t("Customer contact details are hidden until acceptance.")}</p>}
+    {b.status === 'unavailable' && <p className="my-2 text-orange-300">{t("Unavailable: ")}{b.unavailable_reason || t("Blocked by owner")}</p>}
+    {b.price != null && <p>{t("Quoted price ")}{money(b.price)}{t(" · Commission ")}{b.commission_rate}% {b.commission_amount != null && '(' + money(b.commission_amount) + ')'}</p>}
+    {b.cancellation_request && <p className="text-amber-300">{t("Cancellation: ")}{t(b.cancellation_request.owner_status)}</p>}
+    <div className="mt-2 flex gap-2">{b.status === 'pending' && <><Button disabled={busy} onClick={() => act('post', '/bookings/' + b.id + '/accept')}>{t("Accept")}</Button><Button disabled={busy} variant="danger" onClick={() => act('post', '/bookings/' + b.id + '/reject')}>{t("Reject")}</Button></>}
+      {b.status === 'booked' && (!b.advance_required || b.advance_status === 'confirmed') && new Date(b.end_time) <= new Date() && b.cancellation_request?.owner_status !== 'pending' && <Button disabled={busy} onClick={() => act('post', '/bookings/' + b.id + '/complete')}>{t("Mark completed")}</Button>}</div>
+  </div>
+  if (!data) return error ? <Alert message={error} /> : <Spinner />
+  if (turf?.deleted_at) return <div className="space-y-4"><Link to="/reports" className="inline-block rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900">{t("Report an issue to admin")}</Link><h1 className="text-2xl text-white">{turf.name}{t(" · archived")}</h1><Alert type="info" message="An admin deleted this complex. Its history and wallet remain available. Use a new owner account for another complex." /><Card><h2>{t("Platform commission: ")}{turf.commission_rate}%</h2><p>{t("Wallet owed: ")}{money(data.wallet?.balance)}{t(" (negative balance is credit).")}</p>{data.wallet?.entries?.map((w) => <p key={w.id}>{t(w.type)} · {money(w.amount)} · {w.note}</p>)}{data.wallet?.refunds?.map((w) => <p key={'r' + w.id}>{t("Commission reversal · booking #")}{w.booking_id} · {money(w.amount)}</p>)}</Card></div>
+  return <div className="owner-management space-y-6">
+    <Seo title={t("Complex owner dashboard")} path="/dashboard/turf" noIndex />
+    <Link to="/reports" className="inline-block rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900">{t("Report an issue to admin")}</Link>
+    <h1 className="text-2xl font-bold text-white">{turf?.name || t("Register your sports complex")}</h1>
+    {turf && <><p className="owner-page-hint">{t('Open only the section you need. Your bookings stay on the schedule page.')}</p><div className="owner-quick-actions">
+      <Link to={`/dashboard/turf/schedule?field_id=${selected}`}><OwnerIcon name="calendar" /><span><strong>{t('Slots & bookings')}</strong><small>{t('Create slots or change a time')}</small></span></Link>
+      <Link to="/dashboard/turf/payments"><OwnerIcon name="price" /><span><strong>{t('Advance payments')}</strong><small>{t('Check payments and payment numbers')}</small></span></Link>
+      <Link to="/profile"><OwnerIcon name="settings" /><span><strong>{t('Complex contact details')}</strong><small>{t('Name, phone and address')}</small></span></Link>
+    </div></>}
+    {error && <Alert message={error} />}{message && <Alert type="success" message={message} />}
+    {!turf ? <Card><p className="mb-4 text-zinc-400">{t("One owner account can register one complex. Your first field is created automatically. An archived complex cannot be replaced on the same account.")}</p>
+      <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); if (await act('post', '/turfs', withPhotos(complexForm, complexPhotos))) setComplexPhotos([]) }}>
+        {Object.entries({ name: 'Complex name', email: 'Contact email', phone: 'Contact phone', location: 'Complex location', field_name: 'First field name' }).map(([key, label]) => <Input key={key} label={t(label)} required type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'} value={complexForm[key]} onChange={(e) => setComplexForm({ ...complexForm, [key]: e.target.value })} />)}
+        <FieldPlayersInput value={complexForm.players_per_side} onChange={value => setComplexForm({ ...complexForm, players_per_side: value })} disabled={busy} />
+        <FieldPricingInputs form={complexForm} onChange={setComplexForm} />
+        <AdvancePaymentInputs form={complexForm} onChange={setComplexForm} disabled={busy} />
+        {sportChoices(complexForm, setComplexForm)}<PhotoPicker files={complexPhotos} onChange={setComplexPhotos} disabled={busy} label={t("First field photos (optional)")} /><Button type="submit" loading={busy}>{t("Register complex")}</Button>
+      </form></Card> : <>
+      {!turf.is_approved && <Alert type="info" message="Your complex is awaiting admin approval. You can prepare its fields and schedules." />}
+      <Card><h2 className="text-lg font-semibold">{t("Pending requests · all fields")}</h2>{!data.requests.length && <p className="mt-3 text-zinc-400">{t("No pending requests.")}</p>}{data.requests.map(bookingCard)}</Card>
+      <OwnerSection title="Platform balance" hint="See what you owe SportEvo" icon="price">
+        <div><h2 className="text-lg font-semibold">{t("Commission & wallet")}</h2><p className="mt-2 text-2xl text-emerald-300">{Number(turf.commission_rate)}{t("% platform commission")}</p><p className="text-sm text-zinc-400">{t('Commission is recorded after the required advance is confirmed or waived. Bookings without an advance follow normal acceptance.')}</p><p className="mt-4 text-2xl text-amber-300">{money(data.wallet?.balance)}</p><p className="text-sm">{t("Outstanding owed to SportEvo (a negative balance is credit).")}</p>
+          <details className="mt-3"><summary className="cursor-pointer">{t("Recent wallet activity")}</summary>{data.wallet?.entries?.map((w) => <p key={w.id} className="mt-2 text-sm">{t(w.type)} · {money(w.amount)} · {w.note}</p>)}{data.wallet?.refunds?.map((w) => <p key={'r' + w.id} className="mt-2 text-sm text-emerald-300">{t("Commission reversal · booking #")}{w.booking_id} · {money(w.amount)}</p>)}</details>
         </div>
-
-        {message && <Alert type="success" message={message} />}
-
-        {!showRegister ? (
-          <Card className="p-12 text-center">
-            <h2 className="text-lg font-medium text-white">Register your sports complex</h2>
-            <p className="mt-2 text-sm text-zinc-500">
-              Add your facility details and start accepting bookings once approved by an admin.
-            </p>
-            <Button onClick={() => setShowRegister(true)} className="btn-glow mt-6">
-              Register Complex
-            </Button>
-          </Card>
-        ) : (
-          <form
-            onSubmit={handleRegisterTurf}
-            className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 shadow-lg shadow-black/40"
-          >
-            <h2 className="text-lg font-semibold text-white">Register your sports complex</h2>
-            {registerError && <Alert type="error" message={registerError} />}
-            <Input
-              label="Complex Name"
-              placeholder="e.g. Green Arena Sports Complex"
-              value={registerForm.name}
-              onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-              required
-            />
-            <Input
-              label="Email"
-              type="email"
-              placeholder="complex@example.com"
-              value={registerForm.email}
-              onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-              required
-            />
-            <Input
-              label="Phone"
-              placeholder="+1 555 555 5555"
-              value={registerForm.phone}
-              onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-            />
-            <Input
-              label="Location"
-              placeholder="Full address"
-              value={registerForm.location}
-              onChange={(e) => setRegisterForm({ ...registerForm, location: e.target.value })}
-              required
-            />
-            <Input label="Price per slot" type="number" min="0" step="0.01" value={registerForm.price_per_slot} onChange={(e) => setRegisterForm({ ...registerForm, price_per_slot: e.target.value })} required />
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-300">
-                Sports offered <span className="text-zinc-500">(choose at least one)</span>
-              </label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {sports.map((s) => (
-                  <button
-                    type="button"
-                    key={s.id}
-                    onClick={() => toggleSport(s.id)}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-                      registerForm.sports.includes(s.id)
-                        ? 'border-emerald-600 bg-emerald-950/60 text-emerald-300 shadow-[0_0_14px_rgba(16,185,129,0.3)]'
-                        : 'border-zinc-700 bg-zinc-950/60 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
-                    }`}
-                  >
-                    <span
-                      className={`flex h-4 w-4 items-center justify-center rounded border text-[10px] ${
-                        registerForm.sports.includes(s.id) ? 'border-emerald-500 bg-emerald-600 text-white' : 'border-zinc-600'
-                      }`}
-                    >
-                      {registerForm.sports.includes(s.id) ? '✓' : ''}
-                    </span>
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-              {registerForm.sports.length === 0 && (
-                <p className="mt-1 text-xs text-zinc-500">Select at least one sport.</p>
-              )}
+      </OwnerSection>
+      <OwnerSection title="Edit fields & photos" hint="Change a field name, regular price or photos" icon="field"><Select label={t("Manage field")} disabled={busy} value={selected} onChange={(e) => { setSelected(e.target.value); setPhotos([]) }}>{turf.fields.map((f) => <option key={f.id} value={f.id}>{f.name} · {fieldRateLabel(f)}</option>)}</Select>
+        {field && <div className="mt-4 grid gap-5 md:grid-cols-2"><form className="space-y-3" onSubmit={(e) => { e.preventDefault(); act('put', '/turfs/' + turf.id + '/fields/' + field.id, fieldForm) }}>{fieldInputs(fieldForm, setFieldForm)}<Button type="submit" loading={busy}>{t("Save field")}</Button><p className="text-xs text-zinc-400">{t("Price changes do not alter existing booking quotes.")}</p></form>
+          <div><h3 className="mb-2 font-semibold">{field.name}{t(" photos")}</h3><PhotoPicker key={selected} files={photos} onChange={setPhotos} disabled={busy} remaining={24 - field.photos.length} label={t("Add field photos")} />
+            <div className="field-photo-actions">
+              <FieldGallery key={field.id} photos={field.photos} name={field.name} compact />
+              <Button className="min-h-11" loading={busy} disabled={!photos.length} onClick={async () => { if (await act('post', '/turfs/' + turf.id + '/photos', withPhotos({ field_id: field.id }, photos))) setPhotos([]) }}>{t("Upload photos")}</Button>
             </div>
-
-            <div className="flex gap-3">
-              <Button type="submit" loading={registering} disabled={registerForm.sports.length === 0}>
-                Submit for approval
-              </Button>
-              <Button variant="secondary" onClick={() => setShowRegister(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    )
-  }
-
-  const turf = data.turf
-  const approvalStatus = turf.is_approved ? 'approved' : 'pending'
-
-  return (
-    <div className="space-y-8 animate-fade-up">
-      {!turf.is_approved && (
-        <Alert
-          type="info"
-          message="Your complex is pending admin approval. You can manage details and generate slots, but users won't see it until approved."
-        />
-      )}
-      {message && <Alert type="success" message={message} />}
-      {actionError && <Alert type="error" message={actionError} />}
-      {error && <Alert type="error" message={error} />}
-
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-white">{turf.name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
-            <span>{turf.location}</span>
-            <Badge status={approvalStatus} />
-            {turf.sports?.map((s) => (
-              <span key={s.id} className="rounded-full border border-emerald-900/70 bg-emerald-950/50 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
-                {s.name}
-              </span>
-            ))}
-          </div>
-        </div>
-        <Button onClick={() => setShowSlots(!showSlots)}>
-          {showSlots ? 'Close' : 'Generate Slots'}
-        </Button>
-      </div>
-
-      {showSlots && (
-        <form
-          onSubmit={handleGenerate}
-          className="grid grid-cols-1 gap-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 shadow-lg shadow-black/40 sm:grid-cols-2 lg:grid-cols-5"
-        >
-          {slotError && (
-            <div className="sm:col-span-2 lg:col-span-5">
-              <Alert type="error" message={slotError} />
-            </div>
-          )}
-          <Input
-            label="Date"
-            type="date"
-            value={slotForm.date}
-            onChange={(e) => setSlotForm({ ...slotForm, date: e.target.value })}
-            required
-          />
-          <Input
-            label="Start Time"
-            type="time"
-            value={slotForm.start_time}
-            onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
-            required
-          />
-          <Input
-            label="End Time"
-            type="time"
-            value={slotForm.end_time}
-            onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
-            required
-          />
-          <Input
-            label="Slot Duration (min)"
-            type="number"
-            min="15"
-            max="240"
-            step="15"
-            value={slotForm.slot_duration}
-            onChange={(e) => setSlotForm({ ...slotForm, slot_duration: e.target.value })}
-            required
-          />
-          <div className="flex items-end">
-            <Button type="submit" loading={generating} className="w-full">
-              Generate
-            </Button>
-          </div>
-        </form>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Pending Requests" value={data.stats.pendingRequests} accent="amber" />
-        <StatCard label="Booked Today" value={data.stats.todayBookings} accent="blue" />
-        <StatCard label="Available Today" value={data.stats.availableToday} accent="emerald" />
-        <StatCard label="Completed" value={data.stats.completed} accent="violet" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold text-white">Price &amp; wallet</h2>
-          <div className="mt-3 flex items-center justify-between"><div><div className="text-2xl font-bold text-emerald-400">${Number(turf.price_per_slot || 0).toFixed(2)}</div><div className="text-xs text-zinc-500">price per slot · {Number(turf.commission_rate || 0).toFixed(2)}% platform commission</div></div><Button variant="secondary" onClick={() => { setPrice(turf.price_per_slot || ''); setEditingPrice(!editingPrice) }}>Edit price</Button></div>
-          {editingPrice && <div className="mt-3 flex gap-2"><Input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} /><Button onClick={savePrice}>Save</Button></div>}
-          <div className="mt-5 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3"><div className="text-xs text-zinc-400">Outstanding amount owed to Sports Evo</div><div className="text-2xl font-bold text-amber-300">${Number(data.wallet?.balance || 0).toFixed(2)}</div></div>
-        </Card>
-        <Card><h2 className="text-lg font-semibold text-white">Complex photos</h2><p className="mt-1 text-sm text-zinc-500">Upload JPG, PNG or WebP images.</p><div className="mt-3 flex flex-col gap-2 sm:flex-row"><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => setPhotoFiles(e.target.files)} className="text-sm text-zinc-400" /><Button onClick={uploadPhotos}>Upload</Button></div><div className="mt-4 grid grid-cols-4 gap-2">{turf.photos?.map((photo) => <div key={photo.id} className="relative"><img src={photo.url} alt="Complex" className="h-16 w-full rounded object-cover" /><button onClick={() => deletePhoto(photo.id)} className="absolute right-1 top-1 rounded bg-black/80 px-1 text-xs text-rose-300">×</button></div>)}</div></Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div>
-          <h2 className="mb-3 text-lg font-semibold text-white">
-            Booking Requests{" "}
-            <span className="text-sm font-normal text-zinc-500">({data.requests.length} awaiting approval)</span>
-          </h2>
-          {data.requests.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-zinc-500">No pending booking requests.</p>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {data.requests.map((b) => (
-                <div
-                  key={b.id}
-                  className="flex flex-col gap-3 rounded-xl border border-amber-900/60 bg-amber-950/20 px-4 py-3 shadow-sm transition hover:border-amber-700 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-white">
-                      {formatTime(b.start_time)} – {formatTime(b.end_time)} · {formatDate(b.start_time)}
-                    </div>
-                    <div className="mt-1 text-sm text-zinc-400">Customer details are protected until you accept.</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge status={b.status} />
-                    <Button
-                      className="!px-3 !py-1.5 text-xs"
-                      onClick={() => handleAccept(b.id)}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="!px-3 !py-1.5 text-xs"
-                      onClick={() => handleReject(b.id)}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="mb-3 text-lg font-semibold text-white">Today's Schedule</h2>
-          {data.todaysBookings.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-zinc-500">No slots for today. Generate slots to get started.</p>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {data.todaysBookings.map((b) => (
-                <div
-                  key={b.id}
-                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 transition hover:border-zinc-600"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-28 text-sm font-medium text-white">
-                      {formatTime(b.start_time)} – {formatTime(b.end_time)}
-                    </div>
-                    <div className="text-sm text-zinc-400">
-                      {b.status === 'available' ? (
-                        'Open slot'
-                      ) : b.status === 'pending' ? (
-                        <span className="text-xs text-amber-300">Customer details protected · request pending</span>
-                      ) : (
-                        <>
-                          <span className="font-medium text-zinc-200">{b.user?.name || 'N/A'}</span>
-                          <span className="text-xs text-zinc-500"> · {b.user?.email}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge status={b.status} />
-                    {b.status === 'booked' && (
-                      <Button
-                        variant="secondary"
-                        className="!px-2 !py-1 text-xs"
-                        onClick={() => handleComplete(b.id)}
-                      >
-                        Complete
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-white">Upcoming Bookings</h2>
-        {data.upcoming.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-zinc-500">No upcoming bookings.</p>
-          </Card>
-        ) : (
-          <div className="space-y-2">
-            {data.upcoming.map((b) => (
-              <div key={b.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 transition hover:border-emerald-700">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium text-white">
-                    {formatDate(b.start_time)} · {formatTime(b.start_time)} – {formatTime(b.end_time)}
-                  </div>
-                  <Badge status={b.status} />
-                </div>
-                <div className="mt-1 text-sm text-zinc-500">
-                  {b.user?.name || 'N/A'} · {b.user?.email}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+            <div className="mt-3 grid grid-cols-3 gap-2">{field.photos.map((photo) => <div key={photo.id}><img loading="lazy" decoding="async" src={photo.url} alt={field.name} className="h-24 w-full rounded object-cover" /><button disabled={busy} className="text-xs text-rose-300" onClick={() => { if (confirm(t("Delete this photo?"))) act('delete', '/turfs/' + turf.id + '/photos/' + photo.id) }}>{t("Delete photo")}</button></div>)}</div>
+          </div></div>}
+      </OwnerSection>
+      <OwnerSection title="Add another field" hint="Register a new field or court" icon="field"><form className="space-y-4" onSubmit={async (e) => { e.preventDefault(); if (await act('post', '/turfs/' + turf.id + '/fields', withPhotos(newField, newFieldPhotos))) { setNewField(emptyField); setNewFieldPhotos([]) } }}>{fieldInputs(newField, setNewField)}<PhotoPicker files={newFieldPhotos} onChange={setNewFieldPhotos} disabled={busy} /><Button loading={busy} type="submit">{t("Create field")}</Button></form>
+      </OwnerSection>
+      <OwnerSection title="Cancellations & reviews" hint="Reply to cancellation requests and manage reviews" icon="calendar"><WorkflowPanel onChange={load} /></OwnerSection>
+      <OwnerSection title="Booking notifications" hint="Choose whether to receive booking emails" icon="settings"><label className="flex items-center gap-3"><input type="checkbox" checked={turf.booking_request_emails !== false} disabled={busy} onChange={(e) => act('put', '/my-turf', { booking_request_emails: e.target.checked })} />{t("Email me when a booking request is sent")}</label><p className="mt-3 text-sm text-zinc-400">{t("The platform emails your account and complex contact address when they differ.")}</p></OwnerSection>
+      <Link to="/profile" className="inline-block text-sm text-emerald-400">{t("Manage your profile & complex details →")}</Link>
+    </>}
+  </div>
 }

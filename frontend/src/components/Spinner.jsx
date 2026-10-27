@@ -5,10 +5,13 @@ const sizes = {
 }
 
 export default function Spinner({ size = 'md' }) {
+  const { t } = useTranslation()
   return (
     <div
       className={`${sizes[size]} animate-spin rounded-full border-emerald-600 border-t-transparent`}
       role="status"
+      aria-label={t('Loading…')}
     />
   )
 }
+import { useTranslation } from '../i18n/useTranslation'

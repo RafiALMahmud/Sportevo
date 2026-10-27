@@ -1,0 +1,24 @@
+# Local credentials and environment files. Templates and the public Vite flag are safe.
+.env
+.env.*
+!.env.example
+!frontend/.env.production
+auth.json
+*.pem
+*.key
+
+# Dependencies, generated assets, logs and machine-specific files.
+node_modules/
+vendor/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Database copies and private backup/deployment bundles.
+*.sqlite*
+*.sql
+*.sql.gz
+*.tar.gz
+*.zip

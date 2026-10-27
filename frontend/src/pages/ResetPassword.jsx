@@ -1,9 +1,13 @@
+import { useTranslation } from '../i18n/useTranslation'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import api from '../api/client'
+import Seo from '../components/Seo'
+import BrandLogo from '../components/BrandLogo'
 import { Alert, Button, Input } from '../components/ui'
 
 export default function ResetPassword() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { state } = useLocation()
   const [form, setForm] = useState({
@@ -37,15 +41,14 @@ export default function ResetPassword() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-6">
+      <Seo title={t("Reset Password")} description={t("Set a new password for your SportEvo account.")} path="/reset-password" noIndex />
       <div className="w-full max-w-md animate-fade-up">
         <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-800 font-bold text-white">
-              SE
-            </span>
+          <Link to="/" aria-label={t("SportEvo homepage")} className="inline-flex items-center gap-2">
+            <BrandLogo />
           </Link>
-          <h2 className="mt-4 text-2xl font-bold text-white">Reset your password</h2>
-          <p className="mt-1 text-sm text-zinc-500">Enter the code and your new password.</p>
+          <h2 className="mt-4 text-2xl font-bold text-white">{t("Reset your password")}</h2>
+          <p className="mt-1 text-sm text-zinc-500">{t("Enter the code and your new password.")}</p>
         </div>
 
         {error && (
@@ -61,7 +64,7 @@ export default function ResetPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-lg shadow-black/40">
           <Input
-            label="Email"
+            label={t("Email")}
             type="email"
             placeholder="you@example.com"
             value={form.email}
@@ -69,8 +72,8 @@ export default function ResetPassword() {
             required
           />
           <Input
-            label="6-digit code"
-            placeholder="Code from your email"
+            label={t("6-digit code")}
+            placeholder={t("Code from your email")}
             inputMode="numeric"
             maxLength={6}
             value={form.code}
@@ -78,30 +81,26 @@ export default function ResetPassword() {
             required
           />
           <Input
-            label="New password"
+            label={t("New password")}
             type="password"
-            placeholder="At least 6 characters"
+            placeholder={t("At least 6 characters")}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
           />
           <Input
-            label="Confirm new password"
+            label={t("Confirm new password")}
             type="password"
-            placeholder="Repeat password"
+            placeholder={t("Repeat password")}
             value={form.password_confirmation}
             onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })}
             required
           />
-          <Button type="submit" loading={loading} className="w-full">
-            Reset password
-          </Button>
+          <Button type="submit" loading={loading} className="w-full">{t("Reset password")}</Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          <Link to="/login" className="font-medium text-emerald-500 hover:underline">
-            Back to sign in
-          </Link>
+          <Link to="/login" className="font-medium text-emerald-500 hover:underline">{t("Back to sign in")}</Link>
         </p>
       </div>
     </div>

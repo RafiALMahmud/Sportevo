@@ -15,7 +15,6 @@ class SportSeeder extends Seeder
             ['name' => 'Badminton', 'slug' => 'badminton'],
             ['name' => 'Basketball', 'slug' => 'basketball'],
             ['name' => 'Tennis', 'slug' => 'tennis'],
-            ['name' => 'Futsal', 'slug' => 'futsal'],
             ['name' => 'Volleyball', 'slug' => 'volleyball'],
             ['name' => 'Swimming', 'slug' => 'swimming'],
             ['name' => 'Boxing', 'slug' => 'boxing'],

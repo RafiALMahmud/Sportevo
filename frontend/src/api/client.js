@@ -1,32 +1,66 @@
 import axios from 'axios'
-import mockAdapter from './mock'
+
+export const AUTH_SESSION_EXPIRED = 'sportevo:session-expired'
+
+const demoMode = import.meta.env.VITE_DEMO_MODE === 'true'
 
 const api = axios.create({
   baseURL: '/api',
+  // Cookies (HttpOnly session + XSRF token) drive authentication now;
+  // nothing credential-like is ever read from JavaScript storage.
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  ...(import.meta.env.VITE_DEMO_MODE === 'true' ? { adapter: mockAdapter } : {}),
+  ...(demoMode ? { adapter: async (config) => (await import('./mock')).default(config) } : {}),
 })
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+let csrfReady = false
+let csrfPending
+
+function hasXsrfCookie() {
+  return document.cookie.split(';').some((c) => c.trim().startsWith('XSRF-TOKEN='))
+}
+
+async function ensureCsrfCookie(force = false) {
+  if (demoMode || (!force && (csrfReady || hasXsrfCookie()))) return
+  csrfPending ||= api.get('/sanctum/csrf-cookie')
+  try { await csrfPending; csrfReady = true } finally { csrfPending = undefined }
+}
+
+api.interceptors.request.use(async (config) => {
+  if (config.data instanceof FormData) config.headers.delete('Content-Type')
+  const method = (config.method || 'get').toLowerCase()
+  if (!['get', 'head', 'options'].includes(method)) {
+    await ensureCsrfCookie()
   }
   return config
 })
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+  async (error) => {
+    const status = error.response?.status
+    const config = error.config
+
+    // Session expired / missing CSRF token: refresh the CSRF cookie once and retry.
+    if (status === 419 && config && !config.__csrfRetried) {
+      config.__csrfRetried = true
+      csrfReady = false
+      try {
+        await ensureCsrfCookie(true)
+        return api.request(config)
+      } catch {
+        /* fall through */
       }
+    }
+
+    if (status === 401) {
+      try { localStorage.removeItem('user') } catch { /* Storage can be unavailable. */ }
+      // Clear stale authentication without moving visitors off public pages.
+      // ProtectedRoute handles login redirects for private pages.
+      window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED))
     }
     return Promise.reject(error)
   }

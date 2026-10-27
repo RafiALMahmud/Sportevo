@@ -1,0 +1,15 @@
+# Idle login timeout and photo controls
+
+Website accounts log out after **45 minutes without interaction**, across all four roles. Clicking, pointer movement, touching, typing and scrolling renew the idle clock. Background requests, automatic schedule refreshes and page reloads do not renew it. Active tabs share interaction timestamps; timeout checks also run when a sleeping phone or browser tab resumes. Public pages remain accessible after logout; private pages redirect to sign in.
+
+Laravel records `auth_last_activity_at` in the HttpOnly cookie's server session. `/api/me` returns the remaining idle time; only an explicit interaction check carrying `X-Session-Activity-Age` renews it. Checks occur after interaction at most twice per minute per tab, with immediate synchronization close to expiry. An expired login is invalidated before any protected action can run. Delayed interaction checks are backdated to the actual interaction. Existing database sessions inherit their saved activity timestamp when first checked. API bearer tokens have a separate maximum lifetime of 45 minutes; website logins use cookies and can continue while active.
+
+The owner photo controls now use matching 44px minimum tap targets, a 12px gap and wrapping that stacks them in narrow spaces. One photo is labelled “View photo”; multiple photos show a count. Upload is disabled until valid images are selected. English and Bangla labels are supported.
+
+The desktop login introduction keeps its green gradient in both themes. Headings and sport labels are white; the accent and supporting text use bright mint. These colors are scoped to the panel instead of depending on global Tailwind theme colors. The surrounding login form follows the selected theme.
+
+Deploy the combined backend and frontend update with `scripts/update-hostinger-session-ui.ps1`. It includes the Bangla frontend, takes private backups, preserves `.env`, updates the cached auth configuration and verifies the entry JavaScript MIME type. No migrations or account/booking data changes are performed. Use `-Resume` only after the archive upload succeeded and activation failed. Publication requires the private SSH prompts.
+
+Validation: backend authentication tests cover all roles, protected-write rejection, activity renewal, background reads, expiry boundaries, invalid activity and token limits. Mocked Chromium and WebKit browser checks cover photo upload/gallery interactions and layout at 390px/1440px in both themes, login contrast, idle expiry, activity renewal and resuming a partially expired session. No real bookings, accounts or outgoing emails are created by these browser checks.
+
+On 2026-10-14, the full backend suite passed: **116 tests, 900 assertions**. Frontend build and lint passed (existing lint warnings remain), and the UI/idle-clock browser checks passed in Chromium and WebKit. The Bangla catalog audit found no missing translated literals. These checks ran locally; publication is pending the combined SSH upload.

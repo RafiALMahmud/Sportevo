@@ -1,9 +1,13 @@
+import { useTranslation } from '../i18n/useTranslation'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
+import Seo from '../components/Seo'
+import BrandLogo from '../components/BrandLogo'
 import { Alert, Button, Input } from '../components/ui'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -26,17 +30,14 @@ export default function ForgotPassword() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-6">
+      <Seo title={t("Forgot Password")} description={t("Request a reset code for your SportEvo account.")} path="/forgot-password" noIndex />
       <div className="w-full max-w-md animate-fade-up">
         <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-800 font-bold text-white">
-              SE
-            </span>
+          <Link to="/" aria-label={t("SportEvo homepage")} className="inline-flex items-center gap-2">
+            <BrandLogo />
           </Link>
-          <h2 className="mt-4 text-2xl font-bold text-white">Forgot password?</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            We'll email you a 6-digit code to reset your password.
-          </p>
+          <h2 className="mt-4 text-2xl font-bold text-white">{t("Forgot password?")}</h2>
+          <p className="mt-1 text-sm text-zinc-500">{t("We'll email you a 6-digit code to reset your password.")}</p>
         </div>
 
         {error && (
@@ -52,23 +53,18 @@ export default function ForgotPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-lg shadow-black/40">
           <Input
-            label="Email"
+            label={t("Email")}
             type="email"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Button type="submit" loading={loading} className="w-full">
-            Send reset code
-          </Button>
+          <Button type="submit" loading={loading} className="w-full">{t("Send reset code")}</Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
-          Remembered it?{' '}
-          <Link to="/login" className="font-medium text-emerald-500 hover:underline">
-            Back to sign in
-          </Link>
+        <p className="mt-6 text-center text-sm text-zinc-500">{t("Remembered it?")}{' '}
+          <Link to="/login" className="font-medium text-emerald-500 hover:underline">{t("Back to sign in")}</Link>
         </p>
       </div>
     </div>

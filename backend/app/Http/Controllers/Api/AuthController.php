@@ -10,15 +10,32 @@ use App\Http\Requests\ResendCodeRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Models\Role;
+use App\Models\Turf;
 use App\Models\User;
+use App\Services\TrackedMail;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'phone' => ['required', 'string', 'min:7', 'max:20'],
+        ]);
+        $user = $request->user();
+        $user->update($data);
+
+        return response()->json(['message' => 'Profile updated.', 'user' => $this->userPayload($user->fresh('role'))]);
+    }
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $roleName = $request->input('role', 'user');
@@ -44,13 +61,13 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = User::with('role')->where('email', $request->email)->first();
+        $user = User::with('role')->whereEmail($request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials.'], 401);
         }
 
-        if (!$user->email_verified_at) {
+        if (! $user->email_verified_at) {
             return response()->json([
                 'message' => 'Please verify your email first. A verification code was sent to your email.',
                 'email' => $user->email,
@@ -58,47 +75,47 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('auth_token', [$user->role?->name])->plainTextToken;
+        $token = $user->createToken('auth_token', [$user->role?->name], now()->addMinutes(45))->plainTextToken;
+
+        $this->startStatefulSession($request, $user);
 
         return response()->json([
             'message' => 'Login successful.',
             'user' => $this->userPayload($user),
             'token' => $token,
+            ...$this->sessionPayload($request),
         ]);
     }
 
     public function verifyEmail(VerifyEmailRequest $request): JsonResponse
     {
-        $user = User::with('role')->where('email', $request->email)->first();
+        $user = DB::transaction(function () use ($request) {
+            $user = User::with('role')->whereEmail($request->email)->lockForUpdate()->first();
+            abort_if(! $user || $user->email_verified_at || ! $user->verification_code ||
+                ! $user->verification_code_expires_at || $user->verification_code_expires_at->isPast() ||
+                ! Hash::check($request->code, $user->verification_code), 422, 'Invalid or expired verification code.');
+            $user->update(['email_verified_at' => now(), 'verification_code' => null, 'verification_code_expires_at' => null]);
 
-        if (!$user->email_verified_at) {
-            if (!$user->verification_code || !$user->verification_code_expires_at ||
-                $user->verification_code_expires_at->isPast() ||
-                !Hash::check($request->code, $user->verification_code)) {
-                return response()->json(['message' => 'Invalid or expired verification code.'], 422);
-            }
+            return $user;
+        });
 
-            $user->update([
-                'email_verified_at' => now(),
-                'verification_code' => null,
-                'verification_code_expires_at' => null,
-            ]);
-        }
+        $token = $user->createToken('auth_token', [$user->role?->name], now()->addMinutes(45))->plainTextToken;
 
-        $token = $user->createToken('auth_token', [$user->role?->name])->plainTextToken;
+        $this->startStatefulSession($request, $user);
 
         return response()->json([
             'message' => 'Email verified successfully.',
             'user' => $this->userPayload($user),
             'token' => $token,
+            ...$this->sessionPayload($request),
         ]);
     }
 
     public function resendCode(ResendCodeRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::whereEmail($request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'If that email exists, a code has been sent.'], 200);
         }
 
@@ -113,9 +130,9 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::whereEmail($request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'If that email exists, a reset code has been sent.'], 200);
         }
 
@@ -129,7 +146,7 @@ class AuthController extends Controller
         $this->sendMail(
             $user->email,
             'Your Password Reset Code',
-            "Hello {$user->name},<br><br>Use the code below to reset your Sports Evo password. It expires in 10 minutes.<br><br><strong>{$code}</strong>",
+            'Hello '.e($user->name).",<br><br>Use the code below to reset your SportEvo password. It expires in 10 minutes.<br><br><strong>{$code}</strong>",
             $code
         );
 
@@ -138,39 +155,105 @@ class AuthController extends Controller
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'Invalid email or code.'], 422);
+        DB::transaction(function () use ($request) {
+            $user = User::whereEmail($request->email)->lockForUpdate()->first();
+            abort_if(! $user || ! $user->password_reset_code || ! $user->password_reset_code_expires_at ||
+                $user->password_reset_code_expires_at->isPast() ||
+                ! Hash::check($request->code, $user->password_reset_code), 422, 'Invalid or expired reset code.');
+            $user->update([
+                'password' => Hash::make($request->password),
+                'password_reset_code' => null,
+                'password_reset_code_expires_at' => null,
+                'remember_token' => Str::random(60),
+                'auth_version' => (int) $user->auth_version + 1,
+            ]);
+            $user->tokens()->delete();
+            if (config('session.driver') === 'database') {
+                DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+            }
+            TrackedMail::send($user->email, 'SportEvo password changed', '<p>Your password was changed. All previous sessions have been revoked.</p>');
+        });
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
-
-        $expired = !$user->password_reset_code || !$user->password_reset_code_expires_at ||
-            $user->password_reset_code_expires_at->isPast();
-        $valid = $user->password_reset_code && Hash::check($request->code, $user->password_reset_code);
-
-        if ($expired || !$valid) {
-            return response()->json(['message' => 'Invalid or expired reset code.'], 422);
-        }
-
-        $user->update([
-            'password' => Hash::make($request->password),
-            'password_reset_code' => null,
-            'password_reset_code_expires_at' => null,
-        ]);
 
         return response()->json(['message' => 'Password reset successfully. You can now sign in.']);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => $this->userPayload($request->user())]);
+        return response()->json(['user' => $this->userPayload($request->user()), ...$this->sessionPayload($request)]);
+    }
+
+    /**
+     * Owners must use the admin-managed complex deletion workflow.
+     */
+    public function destroyProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if(Turf::withTrashed()->where('turf_manager_id', $user->id)->exists(), 409, 'Complex owner accounts must be managed by an admin. Request complex deletion from your profile page.');
+
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json(['message' => 'Your account has been deleted.']);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        $accessToken = $user?->currentAccessToken();
+        if ($accessToken instanceof PersonalAccessToken) {
+            $accessToken->delete();
+        }
 
         return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    /**
+     * Log the user into the session guard so SPA requests can be authenticated
+     * through an HttpOnly session cookie (Sanctum stateful mode) instead of a
+     * token readable by JavaScript.
+     */
+    private function startStatefulSession(Request $request, User $user): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+        $request->session()->put('auth_version', (int) $user->auth_version);
+        $request->session()->put('auth_last_activity_at', now()->timestamp);
+    }
+
+    private function sessionPayload(Request $request): array
+    {
+        if (! $request->hasSession() || ! Auth::guard('web')->check()) {
+            return [];
+        }
+
+        $expires = (int) $request->session()->get('auth_last_activity_at', now()->timestamp) + 45 * 60;
+
+        return [
+            'session_expires_at' => CarbonImmutable::createFromTimestampUTC($expires)->toIso8601String(),
+            'session_idle_seconds_remaining' => max(0, $expires - now()->timestamp),
+        ];
     }
 
     private function userPayload(User $user): array
@@ -202,33 +285,14 @@ class AuthController extends Controller
 
         $this->sendMail(
             $user->email,
-            'Verify Your Sports Evo Email',
-            "Hello {$user->name},<br><br>Your Sports Evo verification code is:<br><br><strong style='font-size:24px'>{$code}</strong><br><br>This code expires in 15 minutes. If you didn't create this account, you can ignore this email.",
+            'Verify Your SportEvo Email',
+            'Hello '.e($user->name).",<br><br>Your SportEvo verification code is:<br><br><strong style='font-size:24px'>{$code}</strong><br><br>This code expires in 15 minutes. If you didn't create this account, you can ignore this email.",
             $code
         );
     }
 
     private function sendMail(string $to, string $subject, string $body, ?string $devCode = null): void
     {
-        try {
-            $html = '<div style="background:#f6f6f6;padding:24px;font-family:Arial,Helvetica,sans-serif">'
-                . '<div style="max-width:420px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px">'
-                . '<div style="font-size:20px;font-weight:bold;color:#065f46">Sports Evo</div>'
-                . '<p style="color:#374151;font-size:14px;line-height:1.6">' . $body . '</p>'
-                . '<p style="color:#9ca3af;font-size:12px;margin-top:24px">© ' . date('Y') . ' Sports Evo. All rights reserved.</p>'
-                . '</div></div>';
-
-            Mail::html($html, function ($message) use ($to, $subject) {
-                $message->to($to)
-                    ->subject($subject);
-            });
-        } catch (\Throwable $e) {
-            Log::warning('Mail sending failed for ' . $to . ': ' . $e->getMessage());
-        }
-
-        // Always surface the code in dev so flows are testable without real delivery.
-        if ($devCode && config('app.debug')) {
-            Log::info('[DEV CODE] Verification/reset code for ' . $to . ' is: ' . $devCode);
-        }
+        TrackedMail::send($to, $subject, '<div style="font-family:Arial;padding:24px"><h2>SportEvo</h2><p>'.$body.'</p></div>');
     }
 }

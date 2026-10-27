@@ -1,0 +1,2 @@
+Hero photograph source: https://images.unsplash.com/photo-1574629810360-7efbbe195018
+Downloaded for the local SportEvo frontend preview. This is an illustrative sports image, not a photo of a listed complex.

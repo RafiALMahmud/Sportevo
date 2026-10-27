@@ -1,30 +1,36 @@
+import { useTranslation } from '../i18n/useTranslation'
 export function Input({ label, error, className = '', ...props }) {
+  const { t } = useTranslation()
   return (
     <div>
       {label && (
-        <label className="mb-1 block text-sm font-medium text-zinc-300">{label}</label>
+        <label className="mb-1 block text-sm font-medium text-zinc-300">{t(label)}</label>
       )}
       <input
         {...props}
+        placeholder={props.placeholder ? t(props.placeholder) : undefined}
+        aria-label={props['aria-label'] ? t(props['aria-label']) : typeof label === 'string' ? t(label) : undefined}
         className={`w-full rounded-lg border bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 shadow-sm transition placeholder:text-zinc-600 focus:outline-none focus:ring-2 ${
           error
             ? 'border-rose-700 focus:border-rose-500 focus:ring-rose-900'
             : 'border-zinc-700/80 focus:border-emerald-500 focus:ring-emerald-900/60 hover:border-zinc-600'
         } ${className}`}
       />
-      {error && <p className="mt-1 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-400">{t(error)}</p>}
     </div>
   )
 }
 
 export function Select({ label, error, className = '', children, ...props }) {
+  const { t } = useTranslation()
   return (
     <div>
       {label && (
-        <label className="mb-1 block text-sm font-medium text-zinc-300">{label}</label>
+        <label className="mb-1 block text-sm font-medium text-zinc-300">{t(label)}</label>
       )}
       <select
         {...props}
+        aria-label={props['aria-label'] ? t(props['aria-label']) : typeof label === 'string' ? t(label) : undefined}
         className={`w-full rounded-lg border bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 shadow-sm transition focus:outline-none focus:ring-2 ${
           error
             ? 'border-rose-700 focus:ring-rose-900'
@@ -33,12 +39,13 @@ export function Select({ label, error, className = '', children, ...props }) {
       >
         {children}
       </select>
-      {error && <p className="mt-1 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-400">{t(error)}</p>}
     </div>
   )
 }
 
 export function Button({ children, variant = 'primary', loading = false, className = '', ...props }) {
+  const { t } = useTranslation()
   const variants = {
     primary:
       'bg-gradient-to-r from-emerald-700 to-teal-700 text-white hover:from-emerald-600 hover:to-teal-600 focus:ring-emerald-900 btn-glow',
@@ -57,19 +64,20 @@ export function Button({ children, variant = 'primary', loading = false, classNa
       {loading && (
         <span className="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
       )}
-      {children}
+      {typeof children === 'string' ? t(children) : children}
     </button>
   )
 }
 
 export function Alert({ type = 'error', message }) {
+  const { t } = useTranslation()
   const styles = {
     error: 'border-rose-900 bg-rose-950/50 text-rose-300',
     success: 'border-emerald-900 bg-emerald-950/50 text-emerald-300',
     info: 'border-blue-900 bg-blue-950/50 text-blue-300',
   }
   return (
-    <div className={`rounded-lg border px-4 py-3 text-sm ${styles[type]}`}>{message}</div>
+    <div className={`rounded-lg border px-4 py-3 text-sm ${styles[type]}`}>{t(message)}</div>
   )
 }
 

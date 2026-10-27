@@ -6,14 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:local": "vite build --base=/build/ --outDir ../backend/public/build --emptyOutDir --manifest manifest.json",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource/noto-sans-bengali": "^5.3.0",
+    "@react-three/fiber": "^9.8.1",
     "axios": "^1.20.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.2"
+    "react-helmet-async": "^3.0.0",
+    "react-router-dom": "^7.18.2",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

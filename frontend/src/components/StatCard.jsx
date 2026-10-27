@@ -1,4 +1,6 @@
+import { useTranslation } from '../i18n/useTranslation'
 export default function StatCard({ label, value, icon = null, accent = 'emerald' }) {
+  const { t, n } = useTranslation()
   const accents = {
     emerald: 'bg-emerald-950 text-emerald-300 border border-emerald-900',
     blue: 'bg-blue-950 text-blue-300 border border-blue-900',
@@ -16,8 +18,8 @@ export default function StatCard({ label, value, icon = null, accent = 'emerald'
           </div>
         )}
         <div>
-          <div className="text-3xl font-bold text-white">{value}</div>
-          <div className="text-sm font-medium text-zinc-500">{label}</div>
+          <div className="text-3xl font-bold text-white">{typeof value === 'number' ? n(value) : value}</div>
+          <div className="text-sm font-medium text-zinc-500">{t(label)}</div>
         </div>
       </div>
     </div>

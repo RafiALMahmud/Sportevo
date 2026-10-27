@@ -8,9 +8,22 @@ use Illuminate\Support\Facades\Storage;
 
 class TurfPhoto extends Model
 {
-    protected $fillable = ['turf_id', 'path', 'sort_order'];
+    protected $fillable = ['turf_id', 'field_id', 'path', 'sort_order'];
+
     protected $appends = ['url'];
 
-    public function turf(): BelongsTo { return $this->belongsTo(Turf::class); }
-    public function getUrlAttribute(): string { return Storage::disk('public')->url($this->path); }
+    public function turf(): BelongsTo
+    {
+        return $this->belongsTo(Turf::class);
+    }
+
+    public function field(): BelongsTo
+    {
+        return $this->belongsTo(Field::class);
+    }
+
+    public function getUrlAttribute(): string
+    {
+        return Storage::disk('public')->url($this->path);
+    }
 }

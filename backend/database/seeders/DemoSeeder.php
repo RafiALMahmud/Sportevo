@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class UserSeeder extends Seeder
+class DemoSeeder extends Seeder
 {
     public function run(): void
     {
@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
         $badminton = Sport::where('slug', 'badminton')->first();
         $basketball = Sport::where('slug', 'basketball')->first();
         $tennis = Sport::where('slug', 'tennis')->first();
-        $futsal = Sport::where('slug', 'futsal')->first();
+        $futsal = $football; // Football includes the former Futsal category.
         $volleyball = Sport::where('slug', 'volleyball')->first();
         $swimming = Sport::where('slug', 'swimming')->first();
 
@@ -122,8 +122,9 @@ class UserSeeder extends Seeder
     private function makeUser(string $name, string $email, string $phone, $role): User
     {
         $user = User::firstOrCreate(
-            ['email' => $email],
+            ['email_hash' => User::emailHash($email)],
             [
+                'email' => $email,
                 'name' => $name,
                 'phone' => $phone,
                 'password' => Hash::make('password'),
@@ -137,9 +138,13 @@ class UserSeeder extends Seeder
 
     private function makeTurf(string $name, string $email, string $phone, string $location, int $managerId, array $sportIds, float $price = 25.00, float $commission = 10.00): Turf
     {
+        if (! Turf::whereEmail($email)->exists() && Turf::withTrashed()->where('turf_manager_id', $managerId)->exists()) {
+            $managerId = $this->makeUser($name.' Owner', 'owner.'.$email, $phone, Role::where('name', 'turf')->first())->id;
+        }
         $turf = Turf::firstOrCreate(
-            ['email' => $email],
+            ['email_hash' => Turf::emailHash($email)],
             [
+                'email' => $email,
                 'name' => $name,
                 'phone' => $phone,
                 'location' => $location,
@@ -153,6 +158,8 @@ class UserSeeder extends Seeder
         if (count($sportIds) > 0) {
             $turf->sports()->sync(array_values(array_filter($sportIds)));
         }
+        $field = $turf->fields()->firstOrCreate(['name' => 'Main field'], ['price_per_slot' => $price]);
+        $field->sports()->sync(array_values(array_filter($sportIds)));
 
         return $turf;
     }
@@ -174,9 +181,10 @@ class UserSeeder extends Seeder
                     ->where('end_time', $slotEnd)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     Booking::create([
                         'turf_id' => $turf->id,
+                        'field_id' => $turf->fields()->first()->id,
                         'start_time' => $slotStart,
                         'end_time' => $slotEnd,
                         'status' => 'available',
@@ -246,9 +254,10 @@ class UserSeeder extends Seeder
             ->where('status', 'completed')
             ->first();
 
-        if (!$pastCompleted) {
+        if (! $pastCompleted) {
             $slot = Booking::create([
                 'turf_id' => $green->id,
+                'field_id' => $green->fields()->first()->id,
                 'user_id' => $regularUser->id,
                 'start_time' => Carbon::now()->subDays(2)->setTime(10, 0),
                 'end_time' => Carbon::now()->subDays(2)->setTime(11, 0),
@@ -266,9 +275,10 @@ class UserSeeder extends Seeder
             ->where('status', 'cancelled')
             ->first();
 
-        if (!$pastCancelled) {
+        if (! $pastCancelled) {
             Booking::create([
                 'turf_id' => $peak->id,
+                'field_id' => $peak->fields()->first()->id,
                 'user_id' => $jane->id,
                 'start_time' => Carbon::now()->subDays(1)->setTime(12, 0),
                 'end_time' => Carbon::now()->subDays(1)->setTime(13, 0),
