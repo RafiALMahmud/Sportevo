@@ -11,9 +11,11 @@ const UserDashboard = lazy(() => import('./pages/dashboards/UserDashboard'))
 const TurfDashboard = lazy(() => import('./pages/dashboards/TurfDashboard'))
 const FieldSchedule = lazy(() => import('./pages/dashboards/FieldSchedule'))
 const AdvancePayments = lazy(() => import('./pages/dashboards/AdvancePayments'))
+const FeaturedOwner = lazy(() => import('./pages/dashboards/FeaturedOwner'))
 const PlatformDashboard = lazy(() => import('./pages/dashboards/PlatformDashboard'))
 const Turfs = lazy(() => import('./pages/Turfs'))
 const MapSearch = lazy(() => import('./pages/MapSearch'))
+const HowToBook = lazy(() => import('./pages/HowToBook'))
 const TurfDetail = lazy(() => import('./pages/TurfDetail'))
 const FieldSelection = lazy(() => import('./pages/FieldSelection'))
 const Reports = lazy(() => import('./pages/Reports'))
@@ -69,6 +71,7 @@ export default function App() {
 
       <Route element={<Layout />}>
         <Route path="/explore" element={<MapSearch />} />
+        <Route path="/how-to-book" element={<HowToBook />} />
         <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/turfs/:id/fields/:selectedFieldId" element={<TurfDetail />} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -101,6 +104,7 @@ export default function App() {
           element={<ProtectedRoute allowedRoles={['turf']}><FieldSchedule /></ProtectedRoute>}
         />
         <Route path="/dashboard/turf/payments" element={<ProtectedRoute allowedRoles={['turf']}><AdvancePayments /></ProtectedRoute>} />
+        <Route path="/dashboard/turf/featured" element={<ProtectedRoute allowedRoles={['turf']}><FeaturedOwner /></ProtectedRoute>} />
         <Route
           path="/dashboard/platform"
           element={

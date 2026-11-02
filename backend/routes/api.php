@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FieldController;
+use App\Http\Controllers\Api\FeaturedComplexController;
 use App\Http\Controllers\Api\IssueReportController;
 use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\PlaceSearchController;
@@ -39,6 +40,7 @@ Route::get('/locations/search', PlaceSearchController::class)->middleware('throt
 // Public turf browsing (home page & guests)
 Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');
 Route::middleware('throttle:browse')->group(function () {
+    Route::get('/featured-complexes', [FeaturedComplexController::class, 'homepage']);
     Route::get('/turfs', [TurfController::class, 'index']);
     Route::get('/turfs/map', [TurfController::class, 'map']);
     Route::get('/turfs/{turf}', [TurfController::class, 'show']);
@@ -67,6 +69,10 @@ Route::middleware(['auth:sanctum', ValidateSessionVersion::class])->group(functi
         Route::get('/dashboard/user', [DashboardController::class, 'user']);
     });
     Route::middleware('role:turf')->group(function () {
+        Route::get('/featured/owner', [FeaturedComplexController::class, 'owner']);
+        Route::post('/featured/requests', [FeaturedComplexController::class, 'requestPlacement'])->middleware('throttle:10,1');
+        Route::post('/featured/requests/{featuredRequest}/reference', [FeaturedComplexController::class, 'reference'])->middleware('throttle:10,1');
+        Route::post('/featured/requests/{featuredRequest}/cancel', [FeaturedComplexController::class, 'cancel']);
         Route::get('/dashboard/turf', [DashboardController::class, 'turf']);
     });
     Route::middleware('role:admin,superadmin')->group(function () {
@@ -116,6 +122,12 @@ Route::middleware(['auth:sanctum', ValidateSessionVersion::class])->group(functi
 
     // Admin & Superadmin routes
     Route::middleware(['role:admin,superadmin', 'throttle:admin'])->group(function () {
+        Route::get('/admin/featured', [FeaturedComplexController::class, 'admin']);
+        Route::post('/admin/featured/requests/{featuredRequest}/approve', [FeaturedComplexController::class, 'approve']);
+        Route::post('/admin/featured/requests/{featuredRequest}/reject', [FeaturedComplexController::class, 'reject']);
+        Route::post('/admin/featured/placements', [FeaturedComplexController::class, 'add']);
+        Route::put('/admin/featured/placements/{featuredPlacement}', [FeaturedComplexController::class, 'edit']);
+        Route::delete('/admin/featured/placements/{featuredPlacement}', [FeaturedComplexController::class, 'remove']);
         Route::get('/admin/contact-messages', [ContactMessageController::class, 'index']);
         Route::patch('/admin/contact-messages/{contactMessage}', [ContactMessageController::class, 'update']);
         Route::get('/admin/reports', [IssueReportController::class, 'adminIndex']);
@@ -147,6 +159,11 @@ Route::middleware(['auth:sanctum', ValidateSessionVersion::class])->group(functi
         Route::get('/admin/turfs/{turf}/wallet', [AdminController::class, 'wallet'])->withTrashed();
         Route::post('/admin/turfs/{turf}/wallet/settlements', [AdminController::class, 'settleWallet'])->withTrashed();
     });
+});
+
+Route::middleware(['auth:sanctum', ValidateSessionVersion::class, 'role:superadmin', 'throttle:admin'])->group(function () {
+    Route::get('/admin/featured/payment-settings', [FeaturedComplexController::class, 'settings']);
+    Route::put('/admin/featured/payment-settings', [FeaturedComplexController::class, 'updateSettings']);
 });
 
 // Unknown /api paths must answer with the masked JSON 404, never the SPA shell.

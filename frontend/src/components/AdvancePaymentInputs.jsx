@@ -18,8 +18,8 @@ export default function AdvancePaymentInputs({ form, onChange, disabled = false 
     {provider === '__other' && <Input label={t('Payment service name')} required maxLength={80} value={form.payment_provider ?? ''} disabled={disabled} placeholder={t('Enter the payment service name')} onChange={event => update('payment_provider', event.target.value)} />}
     <div className="grid gap-3 sm:grid-cols-2">
       <Input label={t('Advance amount (BDT)')} type="number" min="0.01" max="100000" step="0.01" required disabled={disabled} value={form.advance_amount} onChange={event => update('advance_amount', event.target.value)} />
-      <Input label={t('Payment deadline (minutes)')} type="number" min="30" max="10080" step="1" required disabled={disabled} value={form.advance_window_minutes} onChange={event => update('advance_window_minutes', event.target.value)} />
+      <Input label={t('Payment deadline (minutes)')} type="number" min="10" max="10080" step="1" required disabled={disabled} value={form.advance_window_minutes} onChange={event => update('advance_window_minutes', event.target.value)} />
     </div>
-    <p className="text-xs text-zinc-400">{t('Default: ৳500 within 60 minutes after acceptance. Choose 30 minutes to 7 days. The advance never exceeds the booking total.')}</p>
+    <p className="text-xs text-zinc-400">{t('Default: ৳500 within 60 minutes after acceptance. Choose 10 minutes to 7 days. The advance never exceeds the booking total.')}</p>
   </div>
 }

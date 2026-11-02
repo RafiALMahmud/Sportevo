@@ -6,6 +6,7 @@ import Badge from '../components/Badge'
 import Spinner from '../components/Spinner'
 import Seo from '../components/Seo'
 import BookingAdvancePanel from '../components/BookingAdvancePanel'
+import BookingGuide from '../components/BookingGuide'
 import { bookingDisplayStatus } from '../utils/bookingStatus'
 import { Alert, Card } from '../components/ui'
 
@@ -69,6 +70,7 @@ export default function MyBookings() {
       </div>
 
       {message && <Alert type="success" message={message} />}
+      <BookingGuide compact />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div>

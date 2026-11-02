@@ -1,5 +1,7 @@
 # SportEvo
 
+Local follow-up, 2 November 2026: [paid featured homepage placements](FEATURED-COMPLEXES.md), [public English/Bangla booking guide, 10-minute advance windows and mobile slot-editor popups](BOOKING-UPDATES.md). Admins and superadmins manage placements; only superadmins change SportEvo receiving accounts. These additions are tested locally and pending a coordinated Hostinger deployment.
+
 Published 2 November 2026: [card-free Leaflet/OpenStreetMap search and Google signup/sign-in](MAPS-AND-GOOGLE-SIGN-IN.md), including customer/owner signup and owner onboarding. The same-day follow-up is also live: **Search on map** in customer and owner maps, plus the repair for empty directory filters.
 
 Published with the 2 November deployment: [sports gallery artwork restored](SPORTS-3D.md). The large display uses the previous player pictures and cinematic transitions, while the rolling strip keeps its original sports equipment pictures. The 3D gallery prototype remains inactive in source.

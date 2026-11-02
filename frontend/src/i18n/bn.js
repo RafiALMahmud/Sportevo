@@ -769,7 +769,7 @@ Arrange any refund of money already paid directly with the owner. Platform commi
 Configured advance|নির্ধারিত অগ্রিম
 Configured payment window|পেমেন্টের নির্ধারিত সময়সীমা
 Confirm payment received|টাকা পাওয়া নিশ্চিত করুন
-Default: ৳500 within 60 minutes after acceptance. Choose 30 minutes to 7 days. The advance never exceeds the booking total.|শুরুতে: অনুরোধ গ্রহণের ৬০ মিনিটের মধ্যে ৫০০ টাকা। ৩০ মিনিট থেকে ৭ দিন সময় দেওয়া যাবে। অগ্রিম কখনো মোট বুকিং মূল্যের বেশি হবে না।
+Default: ৳500 within 60 minutes after acceptance. Choose 10 minutes to 7 days. The advance never exceeds the booking total.|শুরুতে: অনুরোধ গ্রহণের ৬০ মিনিটের মধ্যে ৫০০ টাকা। ১০ মিনিট থেকে ৭ দিন সময় দেওয়া যাবে। অগ্রিম কখনো মোট বুকিং মূল্যের বেশি হবে না।
 Enter the payment service name|পেমেন্ট সেবার নাম লিখুন
 Have you checked and received this advance payment?|আপনি কি যাচাই করে এই অগ্রিম টাকা পেয়েছেন?
 Manage advance payments|অগ্রিম পেমেন্ট পরিচালনা করুন
@@ -1005,6 +1005,94 @@ Choose the Google account matching your verified SportEvo email.|আপনার
 This Google account is already connected.|এই গুগল অ্যাকাউন্ট আগে থেকেই যুক্ত আছে।
 Choose either a nearby search or a map area.|কাছাকাছি খোঁজ অথবা মানচিত্রের এলাকা বেছে নিন।
 Search on map|মানচিত্রে খুঁজুন
+Feature your complex|আপনার কমপ্লেক্স প্রচার করুন
+Promote on the homepage|হোমপেজে প্রচার করুন
+Featured complexes|নির্বাচিত কমপ্লেক্স
+Featured|নির্বাচিত
+Sponsored|স্পনসর করা
+Browse all complexes|সব কমপ্লেক্স দেখুন
+Discover highlighted places to play across Bangladesh.|বাংলাদেশজুড়ে খেলার জন্য বেছে নেওয়া কমপ্লেক্সগুলো দেখুন।
+Show your complex on the SportEvo homepage. Choose a package, pay SportEvo, and send your transaction ID for review.|SportEvo হোমপেজে আপনার কমপ্লেক্স দেখান। প্যাকেজ বেছে SportEvo-কে পেমেন্ট করে যাচাইয়ের জন্য ট্রানজেকশন আইডি পাঠান।
+Register your complex first.|আগে আপনার কমপ্লেক্স নিবন্ধন করুন।
+Featured until|প্রচার শেষ হবে
+Featured from|প্রচার শুরু হবে
+Your complex is not currently featured.|আপনার কমপ্লেক্স এখন নির্বাচিত তালিকায় নেই।
+The paid period starts after admin approval. Renewals extend your existing expiry date.|অ্যাডমিন অনুমোদনের পর প্রচারের সময় শুরু হয়। নবায়ন করলে আগের মেয়াদের সঙ্গে নতুন সময় যোগ হবে।
+Featured places reserved|সংরক্ষিত প্রচারের জায়গা
+1. Choose your package|১. প্যাকেজ বেছে নিন
+{count} days|{count} দিন
+Payment method|পেমেন্টের মাধ্যম
+Not configured|এখনও চালু হয়নি
+Create a request before paying. Use the receiving number shown on that request.|পেমেন্ট করার আগে অনুরোধ তৈরি করুন। সেই অনুরোধে দেখানো নম্বরে টাকা পাঠান।
+Create featured request|প্রচারের অনুরোধ করুন
+You already have an open request. Complete or cancel it below.|আপনার একটি অনুরোধ চালু আছে। নিচে সেটি সম্পন্ন বা বাতিল করুন।
+2. Payment & request history|২. পেমেন্ট ও অনুরোধের ইতিহাস
+No featured requests yet.|এখনও প্রচারের কোনো অনুরোধ নেই।
+Pay SportEvo using|SportEvo-কে টাকা পাঠান
+Transaction ID / reference|ট্রানজেকশন আইডি / রেফারেন্স
+Admin note|অ্যাডমিনের মন্তব্য
+Send payment reference|পেমেন্টের রেফারেন্স পাঠান
+Cancel this unpaid featured request?|পেমেন্ট না করা এই প্রচারের অনুরোধ বাতিল করবেন?
+Cancel unpaid request|অপরিশোধিত অনুরোধ বাতিল করুন
+SportEvo receiving accounts|SportEvo-র টাকা গ্রহণের অ্যাকাউন্ট
+Only superadmins can change these details. Existing payment requests keep their original receiving number.|শুধু সুপারঅ্যাডমিন এই তথ্য বদলাতে পারবেন। আগের পেমেন্ট অনুরোধে আগের গ্রহণের নম্বরই থাকবে।
+{provider} receiving number|{provider}-এ টাকা গ্রহণের নম্বর
+Payment instructions|পেমেন্টের নির্দেশনা
+Leave a number blank to disable that payment method. Never enter a PIN, password or card security code.|কোনো মাধ্যম বন্ধ করতে নম্বর খালি রাখুন। পিন, পাসওয়ার্ড বা কার্ডের নিরাপত্তা কোড লিখবেন না।
+Save SportEvo payment details|SportEvo-র পেমেন্ট তথ্য সংরক্ষণ করুন
+Display order|দেখানোর ক্রম
+Times are in Bangladesh time. Lower display-order numbers appear first.|সময় বাংলাদেশের স্থানীয় সময়ে দেখানো হয়েছে। ক্রমের ছোট সংখ্যা আগে দেখা যাবে।
+Reason / admin note|কারণ / অ্যাডমিনের মন্তব্য
+Save placement|প্রচারের তথ্য সংরক্ষণ করুন
+Remove this featured placement now? Payment history will remain.|এখনই নির্বাচিত তালিকা থেকে সরাবেন? পেমেন্টের ইতিহাস থাকবে।
+Remove from homepage|হোমপেজ থেকে সরান
+Homepage featured complexes|হোমপেজের নির্বাচিত কমপ্লেক্স
+Review payments, add complexes directly, change dates or order, and remove placements whenever needed. Payment history is retained.|পেমেন্ট যাচাই করুন, সরাসরি কমপ্লেক্স যোগ করুন, তারিখ বা ক্রম বদলান এবং প্রয়োজনে সরিয়ে দিন। পেমেন্টের ইতিহাস সংরক্ষিত থাকবে।
+Add a complex directly|সরাসরি কমপ্লেক্স যোগ করুন
+Direct admin placements do not record a payment. Use the request approval below to confirm an owner payment.|সরাসরি যোগ করলে কোনো পেমেন্ট নথিভুক্ত হয় না। মালিকের পেমেন্ট নিশ্চিত করতে নিচের অনুরোধ অনুমোদন করুন।
+Select complex|কমপ্লেক্স বেছে নিন
+Search and choose a complex|খুঁজে কমপ্লেক্স বেছে নিন
+Featured duration|প্রচারের মেয়াদ
+Add featured placement|প্রচারে যোগ করুন
+Manage featured placements|নির্বাচিত তালিকা পরিচালনা করুন
+No active featured placements.|এখন কোনো কমপ্লেক্সের প্রচার চলছে না।
+Featured payment requests|প্রচারের পেমেন্ট অনুরোধ
+Request status|অনুরোধের অবস্থা
+No featured requests found.|কোনো প্রচারের অনুরোধ পাওয়া যায়নি।
+Receiving number|টাকা গ্রহণের নম্বর
+Not submitted|জমা দেওয়া হয়নি
+I verified that SportEvo received this payment.|SportEvo এই পেমেন্ট পেয়েছে বলে আমি যাচাই করেছি।
+Confirm payment & feature|পেমেন্ট নিশ্চিত করে প্রচার চালু করুন
+Reject this request? Resolve any received payment with the owner separately.|এই অনুরোধ প্রত্যাখ্যান করবেন? টাকা পেয়ে থাকলে মালিকের সঙ্গে আলাদাভাবে নিষ্পত্তি করুন।
+Featured requests awaiting review|যাচাইয়ের অপেক্ষায় থাকা প্রচারের অনুরোধ
+Slot details|স্লটের বিস্তারিত
+Close slot editor|স্লট সম্পাদনা বন্ধ করুন
+How booking works|বুকিং যেভাবে কাজ করে
+How to book|বুকিংয়ের নিয়ম
+Awaiting payment|পেমেন্টের অপেক্ষায়
+Open requests|চালু অনুরোধ
+Confirmed|নিশ্চিত হয়েছে
+Learn the booking, advance payment and confirmation steps before requesting a slot.|স্লটের অনুরোধ করার আগে বুকিং, অগ্রিম পেমেন্ট ও নিশ্চয়তার ধাপগুলো জেনে নিন।
+Request → Owner accepts → Advance payment → Final confirmation|অনুরোধ → মালিক গ্রহণ করবেন → অগ্রিম পেমেন্ট → চূড়ান্ত নিশ্চয়তা
+Booking guide steps|বুকিং শেখার ধাপগুলো
+Step {count} of 4|৪টির মধ্যে ধাপ {count}
+Previous step|আগের ধাপ
+Next step|পরের ধাপ
+Request a slot|স্লটের অনুরোধ করুন
+Owner accepts|মালিক গ্রহণ করবেন
+Pay & send reference|পেমেন্ট করে রেফারেন্স দিন
+Payment confirmed|পেমেন্ট নিশ্চিত হয়েছে
+Choose a complex, field, date and available time. Sign in and send your booking request. Do not pay an advance before the owner accepts.|কমপ্লেক্স, মাঠ, তারিখ ও খালি সময় বেছে নিন। অ্যাকাউন্টে প্রবেশ করে বুকিংয়ের অনুরোধ পাঠান। মালিক গ্রহণ করার আগে অগ্রিম দেবেন না।
+The owner checks your request. Once accepted, the payment timer starts and My Bookings shows the amount, receiving account and deadline. If the owner rejects the request, no payment is needed.|মালিক আপনার অনুরোধ যাচাই করবেন। গ্রহণ করলে পেমেন্টের সময় গণনা শুরু হবে এবং আমার বুকিং পাতায় টাকার পরিমাণ, গ্রহণের অ্যাকাউন্ট ও সময়সীমা দেখা যাবে। মালিক প্রত্যাখ্যান করলে পেমেন্ট করতে হবে না।
+Pay the advance to the account shown in My Bookings. Enter your transaction ID or payment reference there before the deadline. A reference submitted in time keeps your slot reserved while the owner reviews it.|আমার বুকিং পাতায় দেখানো অ্যাকাউন্টে অগ্রিম পাঠান। সময়সীমার আগে সেখানে ট্রানজেকশন আইডি বা পেমেন্ট রেফারেন্স দিন। সময়মতো রেফারেন্স দিলে মালিক যাচাই করার সময় স্লট সংরক্ষিত থাকবে।
+The owner verifies receipt and confirms your payment. They can also confirm receipt directly after you contact them. Your booking is now confirmed. Check My Bookings for the latest status before your game.|মালিক টাকা পাওয়া যাচাই করে পেমেন্ট নিশ্চিত করবেন। যোগাযোগ করলে তিনি সরাসরিও টাকা পাওয়া নিশ্চিত করতে পারেন। তখন আপনার বুকিং নিশ্চিত হবে। খেলার আগে আমার বুকিং পাতায় সর্বশেষ অবস্থা দেখুন।
+Pay within the deadline shown on your booking. Owners can choose a window from 10 minutes; the usual default is 60 minutes.|বুকিংয়ে দেখানো সময়সীমার মধ্যে পেমেন্ট করুন। মালিক সর্বনিম্ন ১০ মিনিট সময় দিতে পারেন; সাধারণভাবে ৬০ মিনিট থাকে।
+If no payment reference is submitted before the deadline, the slot is released. Submitting a reference is not the same as final payment confirmation.|সময়সীমার আগে পেমেন্ট রেফারেন্স না দিলে স্লট ছেড়ে দেওয়া হবে। রেফারেন্স জমা দেওয়া আর পেমেন্টের চূড়ান্ত নিশ্চয়তা এক নয়।
+If advance payment is turned off or waived, owner acceptance confirms the booking without the advance-payment steps.|অগ্রিম পেমেন্ট বন্ধ থাকলে বা মওকুফ করা হলে অগ্রিমের ধাপ ছাড়াই মালিকের গ্রহণ করা বুকিং নিশ্চিত হয়।
+Track the owner response in My Bookings. If an advance is required, pay after acceptance, submit your reference and wait for payment confirmation.|আমার বুকিং পাতায় মালিকের উত্তর দেখুন। অগ্রিম লাগলে গ্রহণ করার পরে পেমেন্ট করে রেফারেন্স দিন এবং পেমেন্ট নিশ্চিত হওয়ার অপেক্ষা করুন।
+Choose a field and slot, sign in and send a request. After owner acceptance, pay any required advance before the deadline and submit your reference in My Bookings. Final confirmation follows owner payment verification; bookings without an advance are confirmed on acceptance.|মাঠ ও স্লট বেছে অ্যাকাউন্টে প্রবেশ করে অনুরোধ পাঠান। মালিক গ্রহণ করলে নির্ধারিত সময়ের আগে প্রযোজ্য অগ্রিম দিয়ে আমার বুকিং পাতায় রেফারেন্স দিন। মালিক পেমেন্ট যাচাই করলে চূড়ান্ত নিশ্চয়তা মিলবে; অগ্রিম না লাগলে গ্রহণ করলেই বুকিং নিশ্চিত হবে।
+Your complex must be approved before requesting a featured placement.|প্রচারের অনুরোধ করার আগে আপনার কমপ্লেক্স অনুমোদিত হতে হবে।
+SportEvo payment details are not configured yet. Contact SportEvo before paying.|SportEvo-র পেমেন্ট তথ্য এখনও দেওয়া হয়নি। টাকা পাঠানোর আগে SportEvo-র সঙ্গে যোগাযোগ করুন।
 Search an area or place in Bangladesh|বাংলাদেশের এলাকা বা জায়গা খুঁজুন
 Find place|জায়গা খুঁজুন
 Searching places...|জায়গা খোঁজা হচ্ছে...

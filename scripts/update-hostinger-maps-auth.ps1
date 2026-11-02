@@ -1,6 +1,6 @@
 param([switch]$PrepareOnly, [switch]$UsePrepared, [switch]$Resume)
 $ErrorActionPreference = 'Stop'
-$Host.UI.RawUI.WindowTitle = 'SportEvo - Free maps and Google signup deployment'
+$Host.UI.RawUI.WindowTitle = 'SportEvo - Coordinated feature deployment'
 $workspacePath = Split-Path -Parent $PSScriptRoot
 $backendPath = Join-Path $workspacePath 'backend'
 $packagePath = Join-Path $backendPath 'storage/app/private/hostinger-deploy'
@@ -32,7 +32,7 @@ if ($name -notmatch '^\.sportevo-maps-auth-[a-f0-9]{32}$' -or $state.sha256 -not
 if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $state.sha256) { throw 'Prepared archive changed; prepare a fresh release.' }
 if ($PrepareOnly) { Write-Output 'MAPS_AUTH_PACKAGE_READY'; return }
 Write-Host 'Enter your Hostinger SSH password for upload and activation.'
-Write-Host 'This publishes map place search for both owners and customers, plus free maps and Google signup.'
+Write-Host 'This publishes featured complexes, manual promotion payments, 10-minute advance options, mobile slot popups and the bilingual booking guide.'
 Write-Host 'Dependencies are installed privately before maintenance. Existing records, uploads, SMTP credentials and encryption keys are preserved.'
 Write-Host 'Only GOOGLE_CLIENT_ID is added/updated in production configuration. No Google Maps billing or client secret is used.'
 $exitCode = 0
@@ -128,6 +128,11 @@ $columns = [
 ];
 $file = $argv[1];
 $before = is_file($file) ? json_decode(file_get_contents($file), true, 512, JSON_THROW_ON_ERROR) : null;
+foreach (['featured_settings' => ['id','payment_details','instructions'],
+    'featured_requests' => ['id','turf_id','owner_id','days','amount','provider','receiver_number','payment_reference','status','decided_by','starts_at','ends_at'],
+    'featured_placements' => ['id','turf_id','is_enabled','is_sponsored','priority','starts_at','ends_at']] as $table => $fields) {
+    if ($before ? isset($before[$table]) : Illuminate\Support\Facades\Schema::hasTable($table)) $columns[$table] = $fields;
+}
 $current = [];
 foreach ($columns as $table => $fields) {
     $max = $before[$table]['max'] ?? (int) $db::table($table)->max('id');
@@ -157,6 +162,7 @@ mv "$stage/vendor" "$app/vendor"
 find "$app/vendor" -type d -exec chmod 755 {} +
 find "$app/vendor" -type f -exec chmod 644 {} +
 php artisan migrate --force --path=database/migrations/2026_11_02_000001_add_google_identity_and_complex_coordinates.php
+php artisan migrate --force --path=database/migrations/2026_11_02_000002_add_featured_complex_placements.php
 php <<'CONFIGURE'
 <?php
 require 'vendor/autoload.php';
@@ -182,7 +188,7 @@ php <<'VERIFY'
 require 'vendor/autoload.php';
 $app = require 'bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-foreach (['users' => ['google_subject','google_subject_hash'], 'turfs' => ['latitude','longitude'], 'bookings' => ['is_peak','advance_required'], 'fields' => ['players_per_side']] as $table => $fields) {
+foreach (['users' => ['google_subject','google_subject_hash'], 'turfs' => ['latitude','longitude'], 'bookings' => ['is_peak','advance_required'], 'fields' => ['players_per_side'], 'featured_requests' => ['amount','receiver_number','status'], 'featured_placements' => ['starts_at','ends_at','is_enabled'], 'featured_settings' => ['payment_details']] as $table => $fields) {
     foreach ($fields as $column) if (!Illuminate\Support\Facades\Schema::hasColumn($table,$column)) throw new RuntimeException('Required schema column missing.');
 }
 foreach ([['/api/auth/google','POST','AuthController@google'],['/api/auth/google/nonce','GET','AuthController@googleNonce'],['/api/auth/google/register','POST','AuthController@googleRegister'],['/api/auth/google/link','POST','AuthController@googleLink'],['/api/turfs/map','GET','TurfController@map'],['/api/locations/search','GET','PlaceSearchController']] as [$url,$method,$action]) {
@@ -211,6 +217,8 @@ case "$api_type" in *application/json*) echo PUBLIC_DIRECTORY_EMPTY_FILTERS_VERI
 validation_status=$(curl -sS --max-time 20 -H 'Accept: application/json' -o /dev/null -w '%{http_code}' 'https://sportevo.games/api/locations/search?q=ab')
 test "$validation_status" = 422 || { echo PLACE_SEARCH_ROUTE_HTTP_CHECK_FAILED; exit 1; }
 echo PLACE_SEARCH_PUBLIC_VALIDATION_VERIFIED
+featured_type=$(curl -fsS --max-time 20 -H 'Accept: application/json' -o /dev/null -w '%{content_type}' 'https://sportevo.games/api/featured-complexes')
+case "$featured_type" in *application/json*) echo PUBLIC_FEATURED_COMPLEXES_VERIFIED ;; *) echo FEATURED_HTTP_CHECK_FAILED; exit 1 ;; esac
 touch "$stage/activation-complete"
 trap - EXIT HUP INT TERM
 echo MAPS_AUTH_UPDATE_COMPLETE

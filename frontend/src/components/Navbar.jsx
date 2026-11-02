@@ -61,7 +61,7 @@ function Navigation() {
     { to: '/', label: 'Home' }, { to: '/turfs', label: 'All Complexes' }, { to: '/explore', label: 'Near me' },
     ...(user ? [{ to: dashboard, label: 'Dashboard' }] : []),
     ...(user?.role === 'user' ? [{ to: '/bookings', label: 'My Bookings' }] : []),
-    { to: '/profile', label: 'My Profile' }, { to: '/#contact', label: 'Contact', anchor: true },
+    { to: '/profile', label: 'My Profile' }, { to: '/how-to-book', label: 'How to book' }, { to: '/#contact', label: 'Contact', anchor: true },
   ]
   const links = items.map((item) => item.anchor ? <a key={item.to} href={item.to} className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white">{t(item.label)}</a> : <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-950 text-emerald-400' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'}`}>{t(item.label)}</NavLink>)
   const accountButtons = loading ? <span className="text-sm text-zinc-500">{t("Loading…")}</span> : user ? <button type="button" onClick={async () => { await logout(); setOpen(false); navigate('/login') }} className="rounded-lg border border-rose-800 bg-rose-950/30 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-950">{t("Logout")}</button>
@@ -72,7 +72,7 @@ function Navigation() {
       <div className="flex items-center gap-3">
         <Link to="/" aria-label={t("Go to home page")} className="sport-brand flex shrink-0 items-center gap-3 rounded-lg py-1"><BrandLogo /><span className="sport-wordmark text-lg font-semibold text-white">Sport<span className="sport-brand-accent">Evo</span></span></Link>
         <button type="button" aria-label={t("Go back")} onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')} className="hidden rounded-lg border border-zinc-800 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-900">{t("Back")}</button>
-        <nav aria-label={t("Primary")} className="sport-nav-links hidden items-center gap-1 xl:flex">{links}{!user && <><a href="/#how-it-works" className="whitespace-nowrap px-3 py-2 text-sm font-medium">{t("How it works")}</a><a href="/#faq" className="px-3 py-2 text-sm font-medium">{t("FAQ")}</a></>}</nav>
+        <nav aria-label={t("Primary")} className="sport-nav-links hidden items-center gap-1 xl:flex">{links}{!user && <a href="/#faq" className="px-3 py-2 text-sm font-medium">{t("FAQ")}</a>}</nav>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <button ref={searchToggle} type="button" title={t('Search complexes')} aria-label={t('Search complexes')} aria-expanded={searchOpen} aria-controls="navbar-complex-search" onClick={() => setSearchOpen(value => !value)} className="navbar-search-toggle hidden h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 text-zinc-200 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 xl:flex"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg></button>
@@ -87,7 +87,7 @@ function Navigation() {
     <nav id="mobile-navigation" aria-label={t("Primary mobile")} className={`${open ? 'flex' : 'hidden'} sport-mobile-navigation absolute left-0 right-0 top-full flex-col gap-1 overflow-y-auto border-b border-zinc-700 bg-zinc-950 p-4 shadow-xl xl:hidden`}>
       <NavbarSearch initialSearch={searchValue} onSearch={search} />
       {links}
-      {!user && <><a href="/#how-it-works" className="rounded-lg px-3 py-2 text-sm text-zinc-400">{t("How it works")}</a><a href="/#faq" className="rounded-lg px-3 py-2 text-sm text-zinc-400">{t("FAQ")}</a></>}
+      {!user && <a href="/#faq" className="rounded-lg px-3 py-2 text-sm text-zinc-400">{t("FAQ")}</a>}
       <div className="mt-2 flex flex-col gap-2 border-t border-zinc-800 pt-3">{accountButtons}</div>
     </nav>
   </header>

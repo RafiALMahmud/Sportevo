@@ -5,6 +5,7 @@ import { bookingDisplayStatus, isOfflineBooking } from '../../utils/bookingStatu
 import { money } from '../../utils/money'
 import { fieldRateLabel } from '../../utils/fieldPricing'
 import ContactInbox from '../../components/ContactInbox'
+import FeaturedAdmin from '../../components/FeaturedAdmin'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/client'
@@ -54,7 +55,7 @@ export default function PlatformDashboard() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [actionError, setActionError] = useState('')
-  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get('tab') === 'messages' ? 'messages' : 'overview')
+  const [activeTab, setActiveTab] = useState(() => ['messages', 'featured'].includes(new URLSearchParams(window.location.search).get('tab')) ? new URLSearchParams(window.location.search).get('tab') : 'overview')
 
   // --- All booking requests (platform-wide) ---
   const [slots, setSlots] = useState({ data: [], meta: null })
@@ -354,6 +355,7 @@ export default function PlatformDashboard() {
   }
 
   const tabs = [
+    { key: 'featured', label: 'Featured complexes' },
     { key: 'messages', label: `Contact inbox (${data.newContactMessages || 0} new)` },
     { key: 'overview', label: 'Overview' },
     { key: 'operations', label: 'Cancellations & History' },
@@ -392,6 +394,7 @@ export default function PlatformDashboard() {
       {actionError && <Alert type="error" message={actionError} />}
       {error && data && <Alert type="error" message={error} />}
       {data.newContactMessages > 0 && <button type="button" className="w-full rounded-xl border border-emerald-800 bg-emerald-950/40 p-4 text-left text-sm text-emerald-300" onClick={() => setActiveTab('messages')}>{formatNumber(data.newContactMessages)}{t(" new contact message")}{data.newContactMessages === 1 ? '' : t("s")}{t(" awaiting your attention. Open inbox →")}</button>}
+      {data.newFeaturedRequests > 0 && <button type="button" className="w-full rounded-xl border border-emerald-800 bg-emerald-950/40 p-4 text-left text-sm text-emerald-300" onClick={() => setActiveTab('featured')}>{t('Featured requests awaiting review')}: {formatNumber(data.newFeaturedRequests)}</button>}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label={t("Total Users")} value={data.stats.totalUsers} accent="blue" />
@@ -420,6 +423,7 @@ export default function PlatformDashboard() {
 
       {activeTab === 'operations' && <WorkflowPanel admin onChange={refreshSummary} />}
       {activeTab === 'messages' && <ContactInbox onChange={refreshSummary} />}
+      {activeTab === 'featured' && <FeaturedAdmin onChange={refreshSummary} />}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div>

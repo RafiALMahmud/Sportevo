@@ -1,6 +1,6 @@
 import { formatNumber } from '../../i18n/language'
 import { useTranslation } from '../../i18n/useTranslation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import api from '../../api/client'
 import { formError } from '../../api/forms'
@@ -9,6 +9,7 @@ import { fieldRateLabel } from '../../utils/fieldPricing'
 import FieldPricingInputs from '../../components/FieldPricingInputs'
 import SlotGenerationForm from '../../components/SlotGenerationForm'
 import SlotPriceEditor from '../../components/SlotPriceEditor'
+import SlotEditorPanel from '../../components/SlotEditorPanel'
 import { FieldPlayersLabel } from '../../components/FieldPlayers'
 import OwnerSection, { OwnerIcon } from '../../components/OwnerSection'
 import { slotCrossesMidnight } from '../../utils/slotTime'
@@ -34,7 +35,6 @@ const minutes = slot => Math.round((new Date(slot.end_time) - new Date(slot.star
 
 export default function FieldSchedule() {
   const { t, locale, n } = useTranslation()
-  const selection = useRef(null)
   const [params, setParams] = useSearchParams()
   const [turf, setTurf] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -93,11 +93,6 @@ export default function FieldSchedule() {
     const timer = window.setInterval(() => { if (!document.hidden) { setClockNow(Date.now()); setRefresh(value => value + 1) } }, 30000)
     return () => window.clearInterval(timer)
   }, [])
-  useEffect(() => {
-    if (selectedId !== null && window.matchMedia('(max-width: 899px)').matches) {
-      selection.current?.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
-    }
-  }, [selectedId])
   const changeView = updates => {
     const next = new URLSearchParams(params)
     Object.entries(updates).forEach(([name, value]) => next.set(name, String(value)))
@@ -130,6 +125,7 @@ export default function FieldSchedule() {
       <button type="button" disabled={!field || busy} onClick={() => setGenerationOpen(value => !value)} aria-expanded={generationOpen} aria-controls="schedule-generation"><OwnerIcon name="calendar" /><span><strong>{generationOpen ? t('Close slot creator') : t('Create slots')}</strong><small>{t('Add times and prices')}</small></span></button>
       <button type="button" disabled={!field || busy} onClick={() => document.getElementById('owner-time-slots')?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}><OwnerIcon name="price" /><span><strong>{t('Change a slot')}</strong><small>{t('Choose a time below')}</small></span></button>
       <Link to="/dashboard/turf"><OwnerIcon name="field" /><span><strong>{t('Manage fields & complex')}</strong><small>{t('Photos, payments and settings')}</small></span></Link>
+      <Link to="/dashboard/turf/featured"><OwnerIcon name="field" /><span><strong>{t('Feature your complex')}</strong><small>{t('Promote on the homepage')}</small></span></Link>
     </div>
     {error && <Alert message={error} />}{message && <Alert type="success" message={message} />}
     {!field ? <Card><p>{t("Add a field from your dashboard to start creating slots.")}</p></Card> : <>
@@ -150,12 +146,12 @@ export default function FieldSchedule() {
       <div className="schedule-summary" aria-label={t("Schedule totals")}><span><i data-status="available" />{formatNumber(activeSlots.filter(slot => slot.status === 'available').length)}{t(" available")}</span><span><i data-status="booked" />{formatNumber(activeSlots.filter(slot => ['pending', 'booked'].includes(slot.status)).length)}{t(" reserved / pending")}</span><span><i data-status="offline_booking" />{t("{count} offline bookings", { count: n(activeSlots.filter(isOfflineBooking).length) })}</span><span><i data-status="unavailable" />{formatNumber(activeSlots.filter(slot => slot.status === 'unavailable' && !isOfflineBooking(slot)).length)}{t(" unavailable")}</span>{loadingSlots && <span>{t("Refreshing…")}</span>}</div>
       <div className="schedule-layout"><section id="owner-time-slots" aria-label={t("{value0} time slots", { value0: field.name })} className="schedule-slot-grid" aria-busy={loadingSlots}>
         {!activeSlots.length && <div className="schedule-empty">{loadingSlots ? <Spinner /> : <><h2>{t("No slots for this date")}</h2><p>{t("Choose another date or generate slots for ")}{field.name}.</p><Button onClick={() => setGenerationOpen(true)}>{t("Generate slots")}</Button></>}</div>}
-        {activeSlots.map(slot => <button type="button" key={slot.id} className="schedule-slot" data-status={isOfflineBooking(slot) ? 'offline_booking' : slot.status} data-delete-selected={deletingMode && deleteIds.includes(slot.id)} disabled={busy || (deletingMode && !slot.can_delete && !deleteIds.includes(slot.id))} aria-pressed={deletingMode ? deleteIds.includes(slot.id) : chosen?.id === slot.id} onClick={() => { if (deletingMode) { setDeleteIds(ids => ids.includes(slot.id) ? ids.filter(id => id !== slot.id) : ids.length < 200 ? [...ids, slot.id] : ids); return }; setSelectedId(slot.id); setReason(slot.unavailable_reason || ''); setBlockType(slot.unavailable_type || 'unavailable'); setMessage('') }}>
+        {activeSlots.map(slot => <button type="button" key={slot.id} className="schedule-slot" data-status={isOfflineBooking(slot) ? 'offline_booking' : slot.status} data-delete-selected={deletingMode && deleteIds.includes(slot.id)} disabled={busy || (deletingMode && !slot.can_delete && !deleteIds.includes(slot.id))} aria-pressed={deletingMode ? deleteIds.includes(slot.id) : chosen?.id === slot.id} onClick={event => { if (deletingMode) { setDeleteIds(ids => ids.includes(slot.id) ? ids.filter(id => id !== slot.id) : ids.length < 200 ? [...ids, slot.id] : ids); return }; event.currentTarget.focus({ preventScroll: true }); setSelectedId(slot.id); setReason(slot.unavailable_reason || ''); setBlockType(slot.unavailable_type || 'unavailable'); setMessage('') }}>
           {deletingMode && <span className="schedule-delete-marker">{deleteIds.includes(slot.id) ? t('Selected for deletion') : slot.can_delete ? t('Tap to select') : t('Protected booking')}</span>}
           <strong>{time(slot.start_time)} – {time(slot.end_time)}</strong><span>{n(minutes(slot))}{t(" minutes")}</span><b>{money(slot.price)}</b><span className="schedule-status">{slot.status === 'booked' && slot.user && !['awaiting_payment', 'submitted'].includes(slot.advance_status) ? t("Booked by {value0}", { value0: slot.user.name }) : t(labels[bookingDisplayStatus(slot)])}</span>
           {slot.is_peak && <span className="schedule-status">{t('Peak hours')}</span>}{slotCrossesMidnight(slot, timezone) && <span>{t('Ends next day')}</span>}
         </button>)}
-      </section><aside ref={selection} className="schedule-selection" data-selected={Boolean(chosen)} aria-label={t("Selected slot details")} aria-live="polite"><p className="sport-section-label">{t("SELECTED SLOT")}</p><h2>{field.name}</h2><p>{dateLabel}</p>
+      </section><SlotEditorPanel open={Boolean(chosen) && !deletingMode} onClose={() => setSelectedId(null)} busy={busy}><p className="sport-section-label">{t("SELECTED SLOT")}</p><h2>{field.name}</h2><p>{dateLabel}</p>
         {!chosen || deletingMode ? <p className="schedule-selection-hint">{deletingMode ? t('Tap the available slots you want to delete, then choose Delete selected.') : t("Choose a time slot to view details and manage its availability.")}</p> : <div className="space-y-4"><div><strong>{time(chosen.start_time)} – {time(chosen.end_time)}</strong><p>{n(minutes(chosen))}{t(" minutes · ")}{money(chosen.price)}</p><span className="schedule-status" data-status={bookingDisplayStatus(chosen)}>{t(labels[bookingDisplayStatus(chosen)] || chosen.status)}</span></div>
           {chosen.can_delete && <Button variant="danger" disabled={busy} onClick={() => removeSlots([chosen.id])}>{t('Delete this slot')}</Button>}
           {chosen.user && <div className="schedule-contact"><strong>{chosen.user.name}</strong><p>{chosen.user.email}</p><p>{chosen.user.phone || t("No phone supplied")}</p></div>}
@@ -173,7 +169,7 @@ export default function FieldSchedule() {
           {chosen.cancellation_request && <p>{t("Cancellation: ")}{t(chosen.cancellation_request.owner_status)}. <Link to="/dashboard/turf">{t("Manage on dashboard")}</Link></p>}
           {chosen.status === 'booked' && (!chosen.advance_required || chosen.advance_status === 'confirmed') && new Date(chosen.end_time).getTime() <= clockNow && chosen.cancellation_request?.owner_status !== 'pending' && <Button disabled={busy} onClick={() => act('post', `/bookings/${chosen.id}/complete`)}>{t("Mark completed")}</Button>}
         </div>}
-      </aside></div>
+      </SlotEditorPanel></div>
       {slots.some(slot => ['rejected', 'cancelled'].includes(slot.status)) && <details className="schedule-history"><summary>{t("Rejected & cancelled requests")}</summary>{slots.filter(slot => ['rejected', 'cancelled'].includes(slot.status)).map(slot => <p key={slot.id}>{time(slot.start_time)} – {time(slot.end_time)} · {t(slot.status)} · {money(slot.price)}</p>)}</details>}
     </>}
   </div>

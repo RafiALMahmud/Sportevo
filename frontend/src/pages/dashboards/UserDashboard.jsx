@@ -8,6 +8,7 @@ import Badge from '../../components/Badge'
 import StatCard from '../../components/StatCard'
 import Spinner from '../../components/Spinner'
 import Seo from '../../components/Seo'
+import BookingGuide from '../../components/BookingGuide'
 import { Alert, Card } from '../../components/ui'
 
 function formatDate(date) {
@@ -54,6 +55,7 @@ export default function UserDashboard() {
         <p className="mt-1 text-zinc-500">{t("Here's your booking overview.")}</p>
       </div>
 
+      <BookingGuide />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label={t("Total Bookings")} value={data.stats.totalBookings} accent="blue" />
         <StatCard label={t("Pending Requests")} value={data.stats.pendingRequests} accent="amber" />

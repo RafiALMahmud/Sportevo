@@ -77,6 +77,7 @@ export default function TurfDashboard() {
     {turf && <><p className="owner-page-hint">{t('Open only the section you need. Your bookings stay on the schedule page.')}</p><div className="owner-quick-actions">
       <Link to={`/dashboard/turf/schedule?field_id=${selected}`}><OwnerIcon name="calendar" /><span><strong>{t('Slots & bookings')}</strong><small>{t('Create slots or change a time')}</small></span></Link>
       <Link to="/dashboard/turf/payments"><OwnerIcon name="price" /><span><strong>{t('Advance payments')}</strong><small>{t('Check payments and payment numbers')}</small></span></Link>
+      <Link to="/dashboard/turf/featured"><OwnerIcon name="field" /><span><strong>{t('Feature your complex')}</strong><small>{t('Promote on the homepage')}</small></span></Link>
       <Link to="/profile"><OwnerIcon name="settings" /><span><strong>{t('Complex contact details')}</strong><small>{t('Name, phone and address')}</small></span></Link>
     </div></>}
     {error && <Alert message={error} />}{message && <Alert type="success" message={message} />}

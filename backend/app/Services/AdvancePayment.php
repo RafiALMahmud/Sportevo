@@ -18,7 +18,7 @@ class AdvancePayment
         return [
             'advance_enabled' => ['sometimes', 'boolean'],
             'advance_amount' => ['sometimes', 'required', 'numeric', 'min:0.01', 'max:100000'],
-            'advance_window_minutes' => ['sometimes', 'required', 'integer', 'min:30', 'max:10080'],
+            'advance_window_minutes' => ['sometimes', 'required', 'integer', 'min:10', 'max:10080'],
             'payment_provider' => [$registration ? 'required' : 'sometimes', 'required', 'string', 'max:80'],
             'payment_number' => [$registration ? 'required' : 'sometimes', 'required', 'string', 'min:7', 'max:40', 'regex:/^[+0-9][0-9 ()-]+$/'],
         ];

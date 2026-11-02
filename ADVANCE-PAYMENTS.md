@@ -6,7 +6,7 @@ Published to Hostinger on 2026-10-19 with the backend, additive migration and fr
 
 1. A customer must supply a phone number at registration and before requesting a slot. Existing customers without one can add it in My Profile. Profile saves require a phone; admin-created customer/owner accounts require one too.
 2. New complexes must supply their receiving account number and payment service. bKash is the default; Nagad, Rocket or a typed service name can be chosen.
-3. The owner configures an advance and deadline. New complex registration defaults to **enabled, ৳500, 60 minutes**. Deadlines support **30–10,080 minutes (7 days)**. Amounts must be positive and no more than ৳100,000; the booking's advance is capped at its total quote. Free bookings do not require an advance.
+3. The owner configures an advance and deadline. New complex registration defaults to **enabled, ৳500, 60 minutes**. The 2 November local follow-up lowers the minimum to **10 minutes**, retaining the **10,080-minute (7 day)** maximum. Existing production supports 30 minutes until that follow-up is deployed. Amounts must be positive and no more than ৳100,000; the booking's advance is capped at its total quote. Free bookings do not require an advance.
 4. The customer requests an available slot. Advance terms, payment service and receiving number are snapshotted alongside the original total/commission rate. Do not pay before acceptance.
 5. Owner/admin acceptance reserves the slot and starts its deadline. The customer sees the receiving account, amount and deadline in My Bookings. No platform commission is charged yet for advance-required bookings.
 6. The customer pays the owner externally and submits a transaction ID or reference name before the deadline.

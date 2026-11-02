@@ -60,7 +60,7 @@ class DashboardController extends Controller
         $netCharges = WalletEntry::selectRaw("COALESCE(SUM(CASE WHEN type = 'commission_charge' THEN amount ELSE -amount END), 0) AS balance")->value('balance');
         $outstanding = round((float) $netCharges - (float) CommissionRefund::sum('amount'), 2);
 
-        return response()->json(['stats' => $stats, 'newContactMessages' => ContactMessage::where('status', 'new')->count(),
+        return response()->json(['stats' => $stats, 'newFeaturedRequests' => \App\Models\FeaturedRequest::whereIn('status', ['awaiting_payment', 'submitted'])->count(), 'newContactMessages' => ContactMessage::where('status', 'new')->count(),
             'bookingsByStatus' => collect(['available', 'unavailable', 'pending', 'booked', 'rejected', 'cancelled', 'completed'])->mapWithKeys(fn ($s) => [$s => (int) ($statuses[$s] ?? 0)]),
             'recentRegistrations' => User::with('role:id,name')->latest()->take(8)->get(['id', 'name', 'email', 'role_id', 'created_at']),
             'recentBookings' => Booking::with(['turf:id,name', 'field:id,name', 'user:id,name'])->latest()->take(8)->get(),

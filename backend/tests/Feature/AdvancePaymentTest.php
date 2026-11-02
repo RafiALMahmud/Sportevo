@@ -57,6 +57,22 @@ class AdvancePaymentTest extends TestCase
             'start_time' => $slot->start_time->toIso8601String(), 'end_time' => $slot->end_time->toIso8601String()]);
     }
 
+    public function test_ten_minute_deadline_starts_on_acceptance_and_expires_only_after_that_window(): void
+    {
+        [$owner, $customer, $turf, , $slot] = $this->fixture();
+        $turf->update(['advance_window_minutes' => 10]);
+        $this->requestSlot($customer, $slot)->assertCreated();
+        $this->assertNull($slot->fresh()->advance_due_at);
+        $this->travel(2)->hours();
+        $this->actingAs($owner)->postJson('/api/bookings/'.$slot->id.'/accept')->assertOk();
+        $this->assertSame(now()->addMinutes(10)->getTimestamp(), $slot->fresh()->advance_due_at->getTimestamp());
+        $this->travel(9)->minutes();
+        $this->assertFalse(app(AdvancePayment::class)->expire($slot->id));
+        $this->travel(2)->minutes();
+        $this->assertTrue(app(AdvancePayment::class)->expire($slot->id));
+        $this->assertSame('cancelled', $slot->fresh()->status);
+    }
+
     private function accepted(float $price = 1000, bool $enabled = true): array
     {
         $fixture = $this->fixture($price, $enabled);
@@ -100,7 +116,8 @@ class AdvancePaymentTest extends TestCase
         $url = '/api/turfs/'.$turf->id.'/advance-settings';
         $this->actingAs($customer)->getJson($url)->assertForbidden();
         $this->actingAs($this->person('turf'))->putJson($url, ['advance_enabled' => false])->assertForbidden();
-        $this->actingAs($owner)->putJson($url, ['advance_window_minutes' => 29])->assertUnprocessable();
+        $this->actingAs($owner)->putJson($url, ['advance_window_minutes' => 9])->assertUnprocessable();
+        $this->putJson($url, ['advance_window_minutes' => 10])->assertOk()->assertJsonPath('settings.advance_window_minutes', 10);
         $this->putJson($url, ['advance_amount' => -5])->assertUnprocessable();
         $this->putJson($url, ['payment_number' => ''])->assertUnprocessable();
         $this->putJson($url, ['advance_window_minutes' => 30, 'payment_provider' => 'Other wallet', 'payment_number' => '01912345678'])

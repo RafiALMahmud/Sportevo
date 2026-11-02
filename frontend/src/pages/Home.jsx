@@ -18,6 +18,7 @@ import ComplexCover from '../components/ComplexCover'
 export default function Home() {
   const { t } = useTranslation()
   const [turfs, setTurfs] = useState([])
+  const [featuredMode, setFeaturedMode] = useState(false)
   const [sports, setSports] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -31,13 +32,14 @@ export default function Home() {
   const load = useCallback((signal) => {
     setLoading(true)
     setError('')
-    const params = { per_page: 12 }
+    const params = { per_page: 9 }
     if (filters.search.trim()) params.search = filters.search.trim()
     if (filters.sport) params.sport = filters.sport
     if (filters.sport_name) params.sport_name = filters.sport_name
+    const browsing = filters.search.trim() || filters.sport || filters.sport_name
     api
-      .get('/turfs', { params, signal })
-      .then(({ data }) => setTurfs(data.data))
+      .get(browsing ? '/turfs' : '/featured-complexes', { params, signal })
+      .then(({ data }) => { setTurfs(data.data); setFeaturedMode(data.mode === 'featured') })
       .catch((error) => { if (error.code !== 'ERR_CANCELED') setError('Failed to load complexes.') })
       .finally(() => { if (!signal?.aborted) setLoading(false) })
   }, [filters])
@@ -47,7 +49,7 @@ export default function Home() {
       .then(({ data }) => setSports(data.sports))
       .catch(() => {})
   }, [])
-  useEffect(() => { const controller = new AbortController(); load(controller.signal); return () => controller.abort() }, [load])
+  useEffect(() => { const controller = new AbortController(); load(controller.signal); const timer = window.setInterval(() => { if (!document.hidden) load(controller.signal) }, 60000); return () => { controller.abort(); window.clearInterval(timer) } }, [load])
   useEffect(() => {
     if (user?.role !== 'turf') return
     const controller = new AbortController()
@@ -134,6 +136,7 @@ export default function Home() {
             >{t("Search")}</button>
           </form>
 
+        {featuredMode && <div className="featured-home-heading"><h3>{t('Featured complexes')}</h3><p>{t('Discover highlighted places to play across Bangladesh.')}</p></div>}
         {error && (
           <div className="rounded-lg border border-rose-900 bg-rose-950/50 px-4 py-3 text-sm text-rose-300">
             {error}
@@ -158,6 +161,7 @@ export default function Home() {
               >
                 <ComplexCover src={turf.photos?.[0]?.url} name={turf.name} />
                 <div className="p-5">
+                  {turf.is_featured && <span className="featured-home-badge">{t(turf.is_sponsored ? 'Sponsored' : 'Featured')}</span>}
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-lg font-semibold text-white transition group-hover:text-emerald-400">
                       {turf.name}
@@ -203,17 +207,18 @@ export default function Home() {
           </div>
         )}
       </section>
+      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8"><Link to="/turfs" className="sport-button sport-button-secondary">{t('Browse all complexes')}</Link></div>
       <section id="how-it-works" className="sport-how mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <p className="sport-section-label">{t("LESS PLANNING. MORE PLAYING.")}</p><h2>{t("Your next match, in three moves.")}</h2>
         <div className="sport-steps">{[
           ['01', 'Find your field', 'Browse complexes and select the sport you want to play. See field photos and prices before choosing.'],
           ['02', 'Choose your moment', 'Pick your field, date and available time slot. Sign in to send your booking request.'],
-          ['03', 'Get ready to play', "Track the owner's response in My Bookings. Once accepted, bring your team and enjoy your game."],
+          ['03', 'Get ready to play', 'Track the owner response in My Bookings. If an advance is required, pay after acceptance, submit your reference and wait for payment confirmation.'],
         ].map(([number, title, description]) => <article key={number}><span>{formatNumber(number)}</span><h3>{t(title)}</h3><p>{t(description)}</p></article>)}</div>
       </section>
       <section className="sport-owner mx-auto max-w-7xl"><div><p className="sport-section-label">{t("FOR COMPLEX OWNERS")}</p><h2>{t("Your field.")}<br />{t("A bigger audience.")}</h2><p>{t("Put your complex on SportEvo. Add your fields and photos, manage your schedule and receive booking requests in one place.")}</p></div><Link to={user?.role === 'turf' ? '/dashboard/turf' : user ? '/profile' : '/register'} className="sport-button sport-button-primary">{user?.role === 'turf' ? t("Manage your complex") : user ? t("My profile") : t("Join SportEvo")} <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M7 17 17 7M7 7h10v10" /></svg></Link></section>
       <section id="faq" className="sport-faq mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div><p className="sport-section-label">{t("BEFORE YOU PLAY")}</p><h2>{t("A few things to know.")}</h2><p>{t("Simple answers for your next booking.")}</p></div><div>{[
-        ['How do I book a field?', 'Select a complex, choose a field, then pick a date and an available slot. Sign in and send your request. Your booking is confirmed when the owner accepts it.'],
+        ['How do I book a field?', 'Choose a field and slot, sign in and send a request. After owner acceptance, pay any required advance before the deadline and submit your reference in My Bookings. Final confirmation follows owner payment verification; bookings without an advance are confirmed on acceptance.'],
         ['Can I find different sports?', 'Yes. Use the sport filter to browse available games. Select Other sport and enter a game name to search for something different.'],
         ['What currency are prices in?', 'All field prices, booking quotes and balances are in Bangladeshi taka (BDT).'],
         ['How can I report an issue?', 'Sign in and use Report an issue from your dashboard. You can track the admin response on your reports page.'],
