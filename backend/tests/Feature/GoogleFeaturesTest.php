@@ -109,7 +109,7 @@ class GoogleFeaturesTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_existing_accounts_require_explicit_linking_and_keep_their_role(): void
+    public function test_third_party_mailbox_accounts_require_explicit_linking_and_keep_their_role(): void
     {
         $user = $this->user('superadmin');
         $nonce = $this->nonce();
@@ -126,9 +126,58 @@ class GoogleFeaturesTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    public function test_verified_existing_gmail_accounts_auto_connect_without_changing_role_password_or_contact_details(): void
+    {
+        foreach (['user', 'turf', 'admin', 'superadmin'] as $role) {
+            $user = $this->user($role);
+            $user->update(['email' => $role.'@gmail.com']);
+            $before = $user->fresh()->getRawOriginal();
+            $nonce = $this->nonce();
+            $response = $this->postJson('/api/auth/google', ['credential' => $this->token($nonce, ['email' => strtoupper($user->email), 'sub' => 'gmail-'.$role]), 'role' => 'superadmin']);
+            $response->assertOk()->assertJsonPath('user.id', $user->id)->assertJsonPath('user.role', $role)
+                ->assertJsonPath('user.google_connected', true)->assertJsonMissingPath('requires_registration');
+            $after = $user->fresh()->getRawOriginal();
+            foreach (['name', 'email', 'email_hash', 'phone', 'password', 'role_id', 'auth_version'] as $field) $this->assertSame($before[$field] ?? null, $after[$field] ?? null);
+            $this->assertSame(GoogleIdentity::subjectHash('gmail-'.$role), $user->fresh()->google_subject_hash);
+            $this->carrySession($response);
+            \Illuminate\Support\Facades\Auth::forgetGuards();
+            $this->getJson('/api/me')->assertOk()->assertJsonPath('user.id', $user->id);
+            $this->carrySession($this->postJson('/api/logout')->assertOk());
+            \Illuminate\Support\Facades\Auth::forgetGuards();
+        }
+        $this->assertDatabaseCount('users', 4);
+        $this->assertDatabaseCount('email_deliveries', 0);
+    }
+
+    public function test_matching_workspace_accounts_auto_connect_but_missing_or_mismatched_hosted_domains_do_not(): void
+    {
+        $user = $this->user(); $user->update(['email' => 'player@company.example']);
+        foreach ([null, '', 'other.example', ['company.example']] as $hostedDomain) {
+            $nonce = $this->nonce();
+            $this->postJson('/api/auth/google', ['credential' => $this->token($nonce, ['email' => $user->email, 'hd' => $hostedDomain])])->assertConflict();
+            $this->assertNull($user->fresh()->google_subject_hash);
+        }
+        $nonce = $this->nonce();
+        $this->postJson('/api/auth/google', ['credential' => $this->token($nonce, ['email' => $user->email, 'hd' => 'company.example'])])
+            ->assertOk()->assertJsonPath('user.id', $user->id);
+    }
+
+    public function test_auto_connect_never_bypasses_app_verification_or_replaces_another_google_identity(): void
+    {
+        $user = $this->user(); $user->update(['email' => 'existing@gmail.com', 'email_verified_at' => null]);
+        $nonce = $this->nonce();
+        $this->postJson('/api/auth/google', ['credential' => $this->token($nonce, ['email' => $user->email])])->assertForbidden();
+        $this->assertNull($user->fresh()->google_subject_hash);
+        $user->forceFill(['email_verified_at' => now(), 'google_subject' => 'previous-identity', 'google_subject_hash' => GoogleIdentity::subjectHash('previous-identity')])->save();
+        $nonce = $this->nonce();
+        $this->postJson('/api/auth/google', ['credential' => $this->token($nonce, ['email' => $user->email])])->assertConflict();
+        $this->assertSame(GoogleIdentity::subjectHash('previous-identity'), $user->fresh()->google_subject_hash);
+    }
+
     public function test_google_identity_is_released_when_account_is_deleted_without_restoring_history(): void
     {
         $user = $this->user();
+        $user->update(['email' => 'deleted-google-account@gmail.com']);
         $user->forceFill(['google_subject' => 'google-test-identity', 'google_subject_hash' => GoogleIdentity::subjectHash('google-test-identity')])->save();
         $email = $user->email; $user->delete();
         $this->assertNull($user->fresh()->google_subject_hash);

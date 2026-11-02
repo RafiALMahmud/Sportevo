@@ -71,7 +71,13 @@ class GoogleIdentity
         unset($nonces[$nonceHash]);
         $request->session()->put('google_nonces', $nonces);
 
-        return ['sub' => $claims['sub'], 'email' => mb_strtolower(trim($claims['email'])),
+        $email = mb_strtolower(trim($claims['email']));
+        $domain = substr(strrchr($email, '@'), 1);
+        $hostedDomain = is_string($claims['hd'] ?? null) ? mb_strtolower(trim($claims['hd'])) : '';
+        // Google is authoritative for Gmail and its own verified Workspace domains.
+        // A Google account using a third-party mailbox still needs explicit linking.
+        $authoritative = $domain === 'gmail.com' || ($hostedDomain !== '' && $hostedDomain === $domain);
+        return ['sub' => $claims['sub'], 'email' => $email, 'email_authoritative' => $authoritative,
             'name' => mb_substr(trim((string) ($claims['name'] ?? 'Google user')), 0, 255) ?: 'Google user'];
     }
 }

@@ -1003,6 +1003,7 @@ Google registration expired. Please sign in with Google again.|গুগল ন�
 This account already exists. Please sign in.|এই অ্যাকাউন্ট আগে থেকেই আছে। প্রবেশ করুন।
 Choose the Google account matching your verified SportEvo email.|আপনার যাচাই করা SportEvo ইমেইলের সঙ্গে মেলা গুগল অ্যাকাউন্ট বেছে নিন।
 This Google account is already connected.|এই গুগল অ্যাকাউন্ট আগে থেকেই যুক্ত আছে।
+This account is already connected to a different Google account. Sign in with your password.|এই অ্যাকাউন্ট অন্য একটি গুগল অ্যাকাউন্টের সঙ্গে যুক্ত আছে। পাসওয়ার্ড দিয়ে প্রবেশ করুন।
 Choose either a nearby search or a map area.|কাছাকাছি খোঁজ অথবা মানচিত্রের এলাকা বেছে নিন।
 Search on map|মানচিত্রে খুঁজুন
 Feature your complex|আপনার কমপ্লেক্স প্রচার করুন

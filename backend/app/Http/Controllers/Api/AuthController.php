@@ -34,14 +34,26 @@ class AuthController extends Controller
     public function google(Request $request, GoogleIdentity $google): JsonResponse
     {
         $claims = $google->verify($request);
-        $user = User::with('role')->where('google_subject_hash', GoogleIdentity::subjectHash($claims['sub']))->first();
+        $user = DB::transaction(function () use ($claims) {
+            $hash = GoogleIdentity::subjectHash($claims['sub']);
+            $user = User::with('role')->where('google_subject_hash', $hash)->lockForUpdate()->first();
+            if ($user) return $user;
+
+            $user = User::with('role')->whereEmail($claims['email'])->lockForUpdate()->first();
+            if (! $user) return null;
+            abort_unless($user->email_verified_at, 403, 'Verify your SportEvo email before signing in.');
+            abort_unless($claims['email_authoritative'], 409, 'Sign in with your password, then connect Google from My Profile.');
+            abort_if($user->google_subject_hash, 409, 'This account is already connected to a different Google account. Sign in with your password.');
+            $user->forceFill(['google_subject' => $claims['sub'], 'google_subject_hash' => $hash])->save();
+            \App\Services\ActivityLog::record('auth.google_automatically_connected', ['user_id' => $user->id]);
+            return $user;
+        });
         if ($user) {
             abort_unless($user->email_verified_at, 403, 'Verify your SportEvo email before signing in.');
+            $request->session()->forget('google_registration');
             $this->startStatefulSession($request, $user);
             return response()->json(['user' => $this->userPayload($user), ...$this->sessionPayload($request)]);
         }
-        // Never link an existing account by email alone, including privileged accounts.
-        abort_if(User::whereEmail($claims['email'])->exists(), 409, 'Sign in with your password, then connect Google from My Profile.');
         $request->session()->put('google_registration', Crypt::encryptString(json_encode($claims + ['expires' => time() + 600], JSON_THROW_ON_ERROR)));
         return response()->json(['requires_registration' => true, 'email' => $claims['email'], 'name' => $claims['name']]);
     }

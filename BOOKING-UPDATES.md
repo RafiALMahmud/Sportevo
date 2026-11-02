@@ -1,6 +1,6 @@
 # Booking guide, shorter deadlines and mobile editing
 
-Implemented locally on 2 November 2026; pending Hostinger deployment with the featured-complex release.
+Published on Hostinger on 2 November 2026 with the featured-complex release. The real public guide and navigation pass Chromium/WebKit checks at phone/desktop widths, including all four steps, English/Bangla, light/dark modes and the ten-minute deadline instructions.
 
 **How to book** is available to visitors immediately through the desktop navbar and phone menu, linking to public `/how-to-book`. The interactive guide also appears expanded in the customer dashboard and can be opened in My Bookings. Users can choose any of four steps or move with Previous/Next. English/Bangla switching is available inside the guide and uses the site's existing language preference. Light/dark styles and keyboard controls are supported. The public guide is included in the sitemap.
 

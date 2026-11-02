@@ -58,10 +58,10 @@ function Navigation() {
   const searchValue = new URLSearchParams(location.search).get('search') || ''
   const dashboard = dashboardPath(user?.role, user?.needs_complex_registration)
   const items = [
-    { to: '/', label: 'Home' }, { to: '/turfs', label: 'All Complexes' }, { to: '/explore', label: 'Near me' },
+    { to: '/', label: 'Home' }, { to: '/turfs', label: 'All Complexes' },
     ...(user ? [{ to: dashboard, label: 'Dashboard' }] : []),
     ...(user?.role === 'user' ? [{ to: '/bookings', label: 'My Bookings' }] : []),
-    { to: '/profile', label: 'My Profile' }, { to: '/how-to-book', label: 'How to book' }, { to: '/#contact', label: 'Contact', anchor: true },
+    { to: '/profile', label: 'My Profile' }, { to: '/how-to-book', label: 'How to book' },
   ]
   const links = items.map((item) => item.anchor ? <a key={item.to} href={item.to} className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white">{t(item.label)}</a> : <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-950 text-emerald-400' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'}`}>{t(item.label)}</NavLink>)
   const accountButtons = loading ? <span className="text-sm text-zinc-500">{t("Loading…")}</span> : user ? <button type="button" onClick={async () => { await logout(); setOpen(false); navigate('/login') }} className="rounded-lg border border-rose-800 bg-rose-950/30 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-950">{t("Logout")}</button>

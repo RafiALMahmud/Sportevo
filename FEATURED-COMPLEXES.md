@@ -1,6 +1,6 @@
 # Featured homepage placements
 
-Implemented locally on 2 November 2026. This feature requires the coordinated backend migration and frontend release; it has not yet been activated on Hostinger.
+Published on Hostinger on 2 November 2026 with the coordinated backend migration and frontend release. Activation preserved existing account/booking/ledger/photo fingerprints, verified the new public endpoint, and matched all 47 live JavaScript/CSS assets to the release manifest. Public responses expose only card data; owner/admin/payment-settings routes reject unauthenticated requests. SportEvo receiving methods remain unconfigured until a superadmin enters real payment details.
 
 Owners open **Feature your complex** from the main field schedule or complex-management page. The packages are fixed server-side: **15 days / ৳150**, **30 days / ৳300**, **60 days / ৳500**. A complex must be approved, active, have an active owner and at least one field. No payment number is invented or seeded: a superadmin must configure SportEvo's receiving accounts first.
 
