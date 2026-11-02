@@ -1,5 +1,7 @@
 # SportEvo
 
+Published navbar layout follow-up, 2 November: grouped logo, centered single-row navigation, a combined search/language/theme control group and aligned account actions. The menu adapts to actual available space, including Bangla labels and long account names. Frontend-only deployment uses `scripts/update-hostinger-navbar.ps1`; activation completed with a verified JavaScript entry and preserved old assets.
+
 Published 2 November 2026: [paid featured homepage placements](FEATURED-COMPLEXES.md), [public English/Bangla booking guide, 10-minute advance windows and mobile slot-editor popups](BOOKING-UPDATES.md). Admins and superadmins manage placements; only superadmins change SportEvo receiving accounts. Activation and live public-browser checks passed. A same-day Google follow-up automatically connects matching verified Gmail/Workspace accounts on sign-in; see [Google sign-in behavior](MAPS-AND-GOOGLE-SIGN-IN.md).
 
 Published 2 November 2026: [card-free Leaflet/OpenStreetMap search and Google signup/sign-in](MAPS-AND-GOOGLE-SIGN-IN.md), including customer/owner signup and owner onboarding. The same-day follow-up is also live: **Search on map** in customer and owner maps, plus the repair for empty directory filters.
