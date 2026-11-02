@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { dashboardPath } from '../utils/dashboardPath'
 import Seo from '../components/Seo'
 import BrandLogo from '../components/BrandLogo'
+import GoogleSignIn from '../components/GoogleSignIn'
 import { Alert, Button, Input } from '../components/ui'
 
 export default function Login() {
@@ -21,7 +22,7 @@ export default function Login() {
     setLoading(true)
     try {
       const data = await login(form.email, form.password)
-      navigate(dashboardPath(data.user.role), { replace: true })
+      navigate(dashboardPath(data.user.role, data.user.needs_complex_registration), { replace: true })
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.email) {
         navigate('/verify-email', { state: { email: err.response.data.email } })
@@ -101,6 +102,7 @@ export default function Login() {
             <Button type="submit" loading={loading} className="w-full">{t("Sign in")}</Button>
           </form>
 
+          <GoogleSignIn />
           {demoMode && (
           <div className="mt-6">
             <div className="relative">

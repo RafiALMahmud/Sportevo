@@ -33,6 +33,6 @@ class UpdateMyTurfRequest extends FormRequest
             'price_per_slot' => ['sometimes', 'bail', 'numeric', 'min:0', 'max:100000'],
             'sports' => ['nullable', 'bail', 'array', 'min:1', 'max:20'],
             'sports.*' => ['bail', 'integer', 'distinct', 'exists:sports,id'],
-        ];
+        ] + \App\Services\ComplexLocation::rules();
     }
 }

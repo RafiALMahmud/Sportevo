@@ -27,7 +27,7 @@ export default function VerifyEmail() {
       const data = await verifyEmail(email, code)
       const role = data.user.role
       navigate(
-        dashboardPath(role),
+        dashboardPath(role, data.user.needs_complex_registration),
         { replace: true }
       )
     } catch (err) {

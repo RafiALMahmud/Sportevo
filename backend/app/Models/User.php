@@ -45,7 +45,8 @@ class User extends Authenticatable
         return DB::transaction(function () {
             $deleted = parent::delete();
             if ($deleted && ! $this->isForceDeleting()) {
-                $this->forceFill(['email_hash' => static::archivedEmailHash($this->getKey(), $this->email)])->saveQuietly();
+                $this->forceFill(['email_hash' => static::archivedEmailHash($this->getKey(), $this->email),
+                    'google_subject' => null, 'google_subject_hash' => null])->saveQuietly();
             }
 
             return $deleted;
@@ -67,6 +68,7 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
+        'google_subject', 'google_subject_hash',
         'email_hash',
         'auth_version',
         'password',
@@ -80,6 +82,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'google_subject' => 'encrypted',
             'name' => 'encrypted',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',

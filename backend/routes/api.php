@@ -24,16 +24,21 @@ Route::get('/sanctum/csrf-cookie', fn () => response()->noContent());
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/auth/google', [AuthController::class, 'google']);
+    Route::post('/auth/google/register', [AuthController::class, 'googleRegister']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/resend-code', [AuthController::class, 'resendCode']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
+Route::get('/auth/google/nonce', [AuthController::class, 'googleNonce'])->middleware('throttle:20,1');
+
 // Public turf browsing (home page & guests)
 Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');
 Route::middleware('throttle:browse')->group(function () {
     Route::get('/turfs', [TurfController::class, 'index']);
+    Route::get('/turfs/map', [TurfController::class, 'map']);
     Route::get('/turfs/{turf}', [TurfController::class, 'show']);
     Route::get('/turfs/{turf}/slots', [TurfController::class, 'getSlots']);
 
@@ -44,6 +49,7 @@ Route::middleware('throttle:browse')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', ValidateSessionVersion::class])->group(function () {
+    Route::post('/auth/google/link', [AuthController::class, 'googleLink'])->middleware('throttle:6,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::patch('/profile', [AuthController::class, 'updateProfile']);

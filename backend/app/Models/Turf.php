@@ -37,6 +37,7 @@ class Turf extends Model
         'email',
         'phone',
         'location',
+        'latitude', 'longitude',
         'price_per_slot',
         'commission_rate',
         'is_approved',
@@ -46,6 +47,7 @@ class Turf extends Model
     ];
 
     protected $casts = [
+        'latitude' => 'float', 'longitude' => 'float',
         'phone' => 'encrypted',
         'is_approved' => 'boolean',
         'booking_request_emails' => 'boolean',

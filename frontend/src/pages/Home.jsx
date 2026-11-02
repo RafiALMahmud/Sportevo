@@ -99,6 +99,7 @@ export default function Home() {
         </div>
 
         <SportsShowcase />
+        <div className="map-actions home-map-actions"><Link to="/explore?near=1">{t('Find complexes near me')}</Link><Link to="/explore">{t('Explore on map')}</Link></div>
           <form
             onSubmit={handleSearch}
             className="venue-search grid gap-3 md:grid-cols-[1fr_220px_auto]"

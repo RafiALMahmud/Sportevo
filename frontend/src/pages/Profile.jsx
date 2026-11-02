@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext'
 import DeleteAccountCard from '../components/DeleteAccountCard'
 import Seo from '../components/Seo'
 import Spinner from '../components/Spinner'
+import GoogleSignIn from '../components/GoogleSignIn'
+import LocationPicker from '../components/LocationPicker'
 import { Alert, Button, Card, Input } from '../components/ui'
 
 const roles = { user: 'Customer', turf: 'Complex owner', admin: 'Admin', superadmin: 'Superadmin' }
@@ -19,6 +21,7 @@ function ComplexProfile() {
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [reason, setReason] = useState('')
+  const [coordinates, setCoordinates] = useState(null)
   const load = async () => {
     const { data } = await api.get('/dashboard/turf')
     setTurf(data.turf)
@@ -43,6 +46,7 @@ function ComplexProfile() {
       : turf.deleted_at ? <Card><h2 className="text-lg font-semibold">{turf.name}{t(" · archived")}</h2><p className="mt-2 text-zinc-400">{t("Your complex history is retained. Contact an admin to manage this owner account.")}</p></Card> : <>
         <Card><h2 className="text-lg font-semibold">{t("Complex details")}</h2><p className="mt-1 text-sm text-zinc-400">{t("These contact details belong to your sports complex.")}</p><form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); save('put', '/my-turf', Object.fromEntries(new FormData(e.currentTarget))) }}>
           {['name', 'email', 'phone', 'location'].map((key) => <Input key={key + (turf[key] || '')} name={key} label={key === 'name' ? t("Complex name") : key.charAt(0).toUpperCase() + key.slice(1)} defaultValue={turf[key] || ''} required={key !== 'phone'} type={key === 'email' ? 'email' : 'text'} disabled={busy} />)}<Button loading={busy} type="submit">{t("Save complex details")}</Button>
+          <LocationPicker latitude={coordinates?.latitude ?? turf.latitude ?? ''} longitude={coordinates?.longitude ?? turf.longitude ?? ''} onChange={setCoordinates} disabled={busy} />
         </form></Card>
         <Card><h2 className="text-lg font-semibold">{t("Request complex deletion")}</h2><p className="my-2 text-sm text-zinc-400">{t("Only admins can delete a complex and manage its owner account. Resolve open bookings first. Booking, wallet and activity history is retained.")}</p>
           {turf.deletion_request && <p className="mb-3 text-amber-300">{t("Request status: ")}{t(turf.deletion_request.status)}</p>}
@@ -75,6 +79,7 @@ export default function Profile() {
       <Input label={t("Phone")} aria-label={t("Phone")} type="tel" required minLength={7} maxLength={20} value={form.phone} disabled={busy} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       <Button type="submit" loading={busy}>{t("Save profile")}</Button>
     </form></Card>
+    <Card><h2 className="text-lg font-semibold">{t('Google sign-in')}</h2><GoogleSignIn connect /></Card>
     {user.role === 'turf' ? <ComplexProfile /> : <DeleteAccountCard />}
   </div>
 }

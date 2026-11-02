@@ -15,13 +15,16 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $nonce = base64_encode(random_bytes(18));
+        \Illuminate\Support\Facades\Vite::useCspNonce($nonce);
         $response = $next($request);
 
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
         if ($request->is('api/*') || $request->is('up')) {
             $response->headers->set('Cache-Control', 'no-store, private');
@@ -38,11 +41,13 @@ class SecurityHeaders
                     "form-action 'self'",
                     "frame-ancestors 'self'",
                     "object-src 'none'",
-                    "script-src 'self'",
-                    "style-src 'self' 'unsafe-inline'",
-                    "img-src 'self' data: blob:",
-                    "font-src 'self' data:",
-                    "connect-src 'self'",
+                    "script-src 'self' 'nonce-{$nonce}' 'strict-dynamic' https://accounts.google.com/gsi/client",
+                    "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
+                    "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.gstatic.com https://*.googleusercontent.com",
+                    "font-src 'self' data: https://fonts.gstatic.com",
+                    "connect-src 'self' https://accounts.google.com/gsi/ https://tile.openstreetmap.org",
+                    "frame-src https://accounts.google.com/gsi/",
+                    "worker-src 'self' blob:",
                 ])
             );
         }

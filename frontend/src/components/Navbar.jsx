@@ -56,9 +56,9 @@ function Navigation() {
     navigate(`/turfs${params.size ? `?${params}` : ''}`)
   }
   const searchValue = new URLSearchParams(location.search).get('search') || ''
-  const dashboard = dashboardPath(user?.role)
+  const dashboard = dashboardPath(user?.role, user?.needs_complex_registration)
   const items = [
-    { to: '/', label: 'Home' }, { to: '/turfs', label: 'All Complexes' },
+    { to: '/', label: 'Home' }, { to: '/turfs', label: 'All Complexes' }, { to: '/explore', label: 'Near me' },
     ...(user ? [{ to: dashboard, label: 'Dashboard' }] : []),
     ...(user?.role === 'user' ? [{ to: '/bookings', label: 'My Bookings' }] : []),
     { to: '/profile', label: 'My Profile' }, { to: '/#contact', label: 'Contact', anchor: true },

@@ -27,6 +27,7 @@ export default function FieldSelection() {
     <Seo title={t("Choose a field - {value0}", { value0: turf.name })} path={`/turfs/${id}`} />
     <Link to="/turfs" className="text-emerald-400">{t("Back to complexes")}</Link>
     <div><h1 className="text-2xl font-bold text-white">{turf.name}</h1><p className="text-zinc-400">{turf.location}</p><h2 className="mt-4 text-lg font-semibold text-white">{t("Choose your field")}</h2><p className="text-zinc-400">{t("Select a field to see all its photos and available booking slots.")}</p></div>
+    {turf.latitude != null && turf.longitude != null && <a className="map-directory-link" target="_blank" rel="noopener noreferrer" href={'https://www.google.com/maps/dir/?' + new URLSearchParams({ api: '1', destination: `${turf.latitude},${turf.longitude}` })}>{t('Get directions')}</a>}
     {!turf.fields?.length && <p className="text-zinc-400">{t("No fields are available in this complex yet.")}</p>}
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{turf.fields?.map((field) => <Link key={field.id} to={`/turfs/${id}/fields/${field.id}`} className="card overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500">
       <ComplexCover src={field.photos?.[0]?.url} name={field.name} />

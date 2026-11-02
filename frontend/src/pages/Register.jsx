@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Seo from '../components/Seo'
 import BrandLogo from '../components/BrandLogo'
+import GoogleSignIn from '../components/GoogleSignIn'
 import { Alert, Button, Input, Select } from '../components/ui'
 
 export default function Register() {
@@ -58,6 +59,7 @@ export default function Register() {
           </div>
         )}
 
+        <GoogleSignIn initialRole={form.role} />
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-sm">
           <Input
             label={t("Full Name")}

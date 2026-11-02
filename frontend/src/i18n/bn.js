@@ -941,4 +941,67 @@ Search complexes by name|নাম দিয়ে কমপ্লেক্স �
 3D cricket bat, ball and wicket on an emerald display stage|সবুজ মঞ্চে থ্রিডি ক্রিকেট ব্যাট, বল ও উইকেট
 3D tennis racket and ball on an emerald display stage|সবুজ মঞ্চে থ্রিডি টেনিস র‍্যাকেট ও বল
 3D basketball, hoop and woven net on an emerald display stage|সবুজ মঞ্চে থ্রিডি বাস্কেটবল, রিং ও বোনা জাল
+
+All Bangladesh|সারা বাংলাদেশ
+Cancel|বাতিল
+Choose the exact entrance so customers can find your complex. Existing address search still works without a pin.|গ্রাহকেরা যেন কমপ্লেক্স খুঁজে পান, তাই সঠিক প্রবেশপথ বেছে নিন। পিন না দিলেও ঠিকানা দিয়ে খোঁজা যাবে।
+Clear pin|পিন মুছুন
+Complex map pin|কমপ্লেক্সের মানচিত্র পিন
+Enter coordinates manually|নিজে স্থানাঙ্ক লিখুন
+Explore approved complexes across Bangladesh. Choose your location or search an area on the map.|সারা বাংলাদেশের অনুমোদিত কমপ্লেক্স খুঁজুন। আপনার অবস্থান বেছে নিন অথবা মানচিত্রের কোনো এলাকায় খুঁজুন।
+Explore on map|মানচিত্রে দেখুন
+Find complexes near me|আমার কাছের কমপ্লেক্স খুঁজুন
+Find complexes on the map|মানচিত্রে কমপ্লেক্স খুঁজুন
+Find your next game nearby|কাছেই খেলার জায়গা খুঁজুন
+Finish creating your account|অ্যাকাউন্ট তৈরি সম্পন্ন করুন
+Get directions|যাওয়ার পথ দেখুন
+Google account connected.|গুগল অ্যাকাউন্ট যুক্ত হয়েছে।
+Google sign-in|গুগল দিয়ে প্রবেশ
+Latitude|অক্ষাংশ
+Loading map…|মানচিত্র লোড হচ্ছে…
+Longitude|দ্রাঘিমাংশ
+Map & nearby search|মানচিত্র ও কাছাকাছি খোঁজ
+Map pin saved in this form. Save your details to apply it.|এই ফর্মে পিন বেছে নেওয়া হয়েছে। কার্যকর করতে তথ্য সংরক্ষণ করুন।
+Search radius|কত দূরে খুঁজবেন
+Search this area|এই এলাকায় খুঁজুন
+Selected location|বেছে নেওয়া অবস্থান
+Showing up to 300 pins. Zoom in and search this area for more detail.|সর্বোচ্চ ৩০০টি পিন দেখানো হচ্ছে। আরও বিস্তারিত পেতে জুম করে এই এলাকায় খুঁজুন।
+Signing in…|প্রবেশ করা হচ্ছে…
+Sorted by approximate straight-line distance. Your location is used for this search only.|আনুমানিক সরলরেখার দূরত্ব অনুযায়ী সাজানো। আপনার অবস্থান শুধু এই খোঁজের জন্য ব্যবহার করা হয়।
+Sports|খেলার ধরন
+Tap a pin to view a complex. Tap elsewhere to search nearby, or move the map and choose Search this area.|কমপ্লেক্স দেখতে পিনে চাপুন। অন্য জায়গায় চাপ দিয়ে কাছাকাছি খুঁজুন, অথবা মানচিত্র সরিয়ে এই এলাকায় খুঁজুন বেছে নিন।
+Tap the map to place the pin. Drag the pin to adjust it.|পিন বসাতে মানচিত্রে চাপুন। ঠিক করতে পিন টেনে সরান।
+Try again|আবার চেষ্টা করুন
+View fields|মাঠ দেখুন
+Your complex|আপনার কমপ্লেক্স
+{count} km|{count} কিমি
+{count} km away|{count} কিমি দূরে
+Near me|আমার কাছাকাছি
+Finding your location…|আপনার অবস্থান খোঁজা হচ্ছে…
+Show map|মানচিত্র দেখুন
+Show list only|শুধু তালিকা দেখুন
+Choose on map|মানচিত্রে বেছে নিন
+Hide map|মানচিত্র লুকান
+Sports complexes map|কমপ্লেক্সের মানচিত্র
+Complex location map|কমপ্লেক্সের অবস্থানের মানচিত্র
+Connect your matching Google account|একই ইমেইলের গুগল অ্যাকাউন্ট যুক্ত করুন
+Or continue with Google|অথবা গুগল দিয়ে এগিয়ে যান
+Google sign-in failed. Please try again.|গুগল দিয়ে প্রবেশ করা যায়নি। আবার চেষ্টা করুন।
+Google sign-in is temporarily unavailable.|গুগল দিয়ে প্রবেশ আপাতত সম্ভব হচ্ছে না।
+Unable to create your account.|অ্যাকাউন্ট তৈরি করা যায়নি।
+Map search is not configured yet. You can still use the list.|মানচিত্রে খোঁজ এখনো চালু হয়নি। তালিকা থেকে খুঁজতে পারবেন।
+Map tiles are unavailable. You can still select pins or use the list.|মানচিত্রের ছবি পাওয়া যাচ্ছে না। পিন বেছে নিতে অথবা তালিকা থেকে খুঁজতে পারবেন।
+Unable to load the map. You can still use the list.|মানচিত্র লোড করা যায়নি। তালিকা থেকে খুঁজতে পারবেন।
+Unable to load map pins. List search is still available.|মানচিত্রের পিন লোড করা যায়নি। তালিকা থেকে খুঁজতে পারবেন।
+Location is unavailable. Choose a point on the map or search by area.|অবস্থান পাওয়া যাচ্ছে না। মানচিত্রে জায়গা বেছে নিন অথবা এলাকা দিয়ে খুঁজুন।
+Location could not be obtained. Allow location access or choose an area manually.|অবস্থান পাওয়া যায়নি। অবস্থানের অনুমতি দিন অথবা নিজে এলাকা বেছে নিন।
+Google sign-in is not configured.|গুগল দিয়ে প্রবেশ এখনো চালু হয়নি।
+Google sign-in could not be verified. Please try again.|গুগল পরিচয় যাচাই করা যায়নি। আবার চেষ্টা করুন।
+Verify your SportEvo email before signing in.|প্রবেশের আগে আপনার SportEvo ইমেইল যাচাই করুন।
+Sign in with your password, then connect Google from My Profile.|পাসওয়ার্ড দিয়ে প্রবেশ করে আমার প্রোফাইল থেকে গুগল যুক্ত করুন।
+Google registration expired. Please sign in with Google again.|গুগল নিবন্ধনের সময় শেষ। গুগল দিয়ে আবার প্রবেশ করুন।
+This account already exists. Please sign in.|এই অ্যাকাউন্ট আগে থেকেই আছে। প্রবেশ করুন।
+Choose the Google account matching your verified SportEvo email.|আপনার যাচাই করা SportEvo ইমেইলের সঙ্গে মেলা গুগল অ্যাকাউন্ট বেছে নিন।
+This Google account is already connected.|এই গুগল অ্যাকাউন্ট আগে থেকেই যুক্ত আছে।
+Choose either a nearby search or a map area.|কাছাকাছি খোঁজ অথবা মানচিত্রের এলাকা বেছে নিন।
 `.trim().split('\n').map(line => { const split = line.indexOf('|'); return [line.slice(0, split).trim(), line.slice(split + 1).trim()] }))

@@ -26,6 +26,6 @@ class StoreTurfRequest extends FormRequest
             'email' => ['required', 'bail', 'string', 'email:rfc', 'max:255'],
             'phone' => ['nullable', 'bail', 'string', 'max:20'],
             'location' => ['required', 'bail', 'string', 'min:2', 'max:255'],
-        ] + FieldPricing::rules($this->all()) + FieldSports::rules() + FieldPhotos::rules() + AdvancePayment::rules(true);
+        ] + \App\Services\ComplexLocation::rules() + FieldPricing::rules($this->all()) + FieldSports::rules() + FieldPhotos::rules() + AdvancePayment::rules(true);
     }
 }

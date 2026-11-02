@@ -16,6 +16,7 @@ import { getSports } from '../../api/catalog'
 import Badge from '../../components/Badge'
 import Spinner from '../../components/Spinner'
 import Seo from '../../components/Seo'
+import LocationPicker from '../../components/LocationPicker'
 import WorkflowPanel from '../../components/WorkflowPanel'
 import OwnerSection, { OwnerIcon } from '../../components/OwnerSection'
 import { bookingDisplayStatus } from '../../utils/bookingStatus'
@@ -25,7 +26,7 @@ const emptyField = { name: '', pricing_mode: 'slot', price_per_slot: '', price_p
 
 export default function TurfDashboard() {
   const { t, locale } = useTranslation()
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
   const [data, setData] = useState(null)
   const [sports, setSports] = useState([])
   const [error, setError] = useState('')
@@ -52,7 +53,7 @@ export default function TurfDashboard() {
   useEffect(() => { if (field) setFieldForm({ name: field.name, pricing_mode: field.pricing_mode || 'slot', price_per_slot: field.price_per_slot, price_per_hour: field.price_per_hour ?? '', players_per_side: field.players_per_side ?? '', sports: field.sports.map((s) => s.id) }) }, [field])
   const act = async (method, url, payload) => {
     setBusy(true); setError(''); setMessage('')
-    try { const { data: result } = await api[method](url, payload); setMessage(result.message || 'Saved.'); await load(); getSports(true).then(({ data: catalog }) => setSports(catalog.sports)).catch(() => {}); return true }
+    try { const { data: result } = await api[method](url, payload); if (method === 'post' && url === '/turfs') setUser({ ...user, needs_complex_registration: false }); setMessage(result.message || 'Saved.'); await load(); getSports(true).then(({ data: catalog }) => setSports(catalog.sports)).catch(() => {}); return true }
     catch (e) { setError(formError(e)); return false }
     finally { setBusy(false) }
   }
@@ -83,6 +84,7 @@ export default function TurfDashboard() {
       <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); if (await act('post', '/turfs', withPhotos(complexForm, complexPhotos))) setComplexPhotos([]) }}>
         {Object.entries({ name: 'Complex name', email: 'Contact email', phone: 'Contact phone', location: 'Complex location', field_name: 'First field name' }).map(([key, label]) => <Input key={key} label={t(label)} required type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'} value={complexForm[key]} onChange={(e) => setComplexForm({ ...complexForm, [key]: e.target.value })} />)}
         <FieldPlayersInput value={complexForm.players_per_side} onChange={value => setComplexForm({ ...complexForm, players_per_side: value })} disabled={busy} />
+        <LocationPicker latitude={complexForm.latitude} longitude={complexForm.longitude} onChange={coordinates => setComplexForm({ ...complexForm, ...coordinates })} disabled={busy} />
         <FieldPricingInputs form={complexForm} onChange={setComplexForm} />
         <AdvancePaymentInputs form={complexForm} onChange={setComplexForm} disabled={busy} />
         {sportChoices(complexForm, setComplexForm)}<PhotoPicker files={complexPhotos} onChange={setComplexPhotos} disabled={busy} label={t("First field photos (optional)")} /><Button type="submit" loading={busy}>{t("Register complex")}</Button>

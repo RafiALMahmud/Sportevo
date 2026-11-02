@@ -13,6 +13,7 @@ const FieldSchedule = lazy(() => import('./pages/dashboards/FieldSchedule'))
 const AdvancePayments = lazy(() => import('./pages/dashboards/AdvancePayments'))
 const PlatformDashboard = lazy(() => import('./pages/dashboards/PlatformDashboard'))
 const Turfs = lazy(() => import('./pages/Turfs'))
+const MapSearch = lazy(() => import('./pages/MapSearch'))
 const TurfDetail = lazy(() => import('./pages/TurfDetail'))
 const FieldSelection = lazy(() => import('./pages/FieldSelection'))
 const Reports = lazy(() => import('./pages/Reports'))
@@ -37,7 +38,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (!user) return <Navigate to="/login" replace />
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={dashboardPath(user.role)} replace />
+    return <Navigate to={dashboardPath(user.role, user.needs_complex_registration)} replace />
   }
 
   return children
@@ -47,7 +48,7 @@ function DashboardRedirect() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
 
-  return <Navigate to={dashboardPath(user.role)} replace />
+  return <Navigate to={dashboardPath(user.role, user.needs_complex_registration)} replace />
 }
 
 export default function App() {
@@ -59,7 +60,7 @@ export default function App() {
     <Suspense fallback={<div className="flex min-h-[70vh] items-center justify-center"><Spinner size="lg" /></div>}>
     {authPage && <div className="auth-language-toggle"><LanguageToggle /></div>}
     <Routes>
-      <Route path="/" element={user?.role === 'turf' ? (loading ? <div className="flex min-h-[70vh] items-center justify-center"><Spinner size="lg" /></div> : <Navigate to={dashboardPath(user.role)} replace />) : <Home />} />
+      <Route path="/" element={user?.role === 'turf' ? (loading ? <div className="flex min-h-[70vh] items-center justify-center"><Spinner size="lg" /></div> : <Navigate to={dashboardPath(user.role, user.needs_complex_registration)} replace />) : <Home />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
       <Route path="/verify-email" element={user ? <Navigate to="/dashboard" replace /> : <VerifyEmail />} />
@@ -67,6 +68,7 @@ export default function App() {
       <Route path="/reset-password" element={user ? <Navigate to="/dashboard" replace /> : <ResetPassword />} />
 
       <Route element={<Layout />}>
+        <Route path="/explore" element={<MapSearch />} />
         <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/turfs/:id/fields/:selectedFieldId" element={<TurfDetail />} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

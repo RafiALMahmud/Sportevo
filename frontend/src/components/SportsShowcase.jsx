@@ -1,52 +1,33 @@
 import { useTranslation } from '../i18n/useTranslation'
-import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import football from '../assets/sports/sculptures/football.webp'
-import cricket from '../assets/sports/sculptures/cricket.webp'
-import tennis from '../assets/sports/sculptures/tennis.webp'
-import basketball from '../assets/sports/sculptures/basketball.webp'
+import { useEffect, useRef, useState } from 'react'
+import football from '../assets/sports/football-r9.webp'
+import cricket from '../assets/sports/cricket-ponting.webp'
+import tennis from '../assets/sports/tennis-federer.webp'
+import basketball from '../assets/sports/basketball-kobe.webp'
+import footballCard from '../assets/sports/football-card.webp'
+import cricketCard from '../assets/sports/cricket-card.webp'
+import tennisCard from '../assets/sports/tennis-card.webp'
+import basketballCard from '../assets/sports/basketball-card.webp'
 
-const SportSculptures = lazy(() => import('./SportSculptures'))
-
-const sports = [
-  { id: 'football', title: 'Football', note: 'Bring your squad. Own the pitch.', image: football, alt: '3D football and goal on an emerald display stage' },
-  { id: 'cricket', title: 'Cricket', note: 'Every over is a new opportunity.', image: cricket, alt: '3D cricket bat, ball and wicket on an emerald display stage' },
-  { id: 'tennis', title: 'Tennis', note: 'Find your rhythm. Make your next serve.', image: tennis, alt: '3D tennis racket and ball on an emerald display stage' },
-  { id: 'basketball', title: 'Basketball', note: 'Your team. Your court. Your next shot.', image: basketball, alt: '3D basketball, hoop and woven net on an emerald display stage' },
+const sportCards = [
+  { title: 'Football', image: footballCard, alt: 'Football and boots on a floodlit turf' },
+  { title: 'Cricket', image: cricketCard, alt: 'Cricket ball, bat and stumps under emerald lighting' },
+  { title: 'Tennis', image: tennisCard, alt: 'Tennis balls and racket on a neon-lit court' },
+  { title: 'Basketball', image: basketballCard, alt: 'Basketball on an indoor court with a hoop behind it' },
 ]
 
-class SculptureBoundary extends Component {
-  state = { failed: false }
-  static getDerivedStateFromError() { return { failed: true } }
-  componentDidCatch() { this.props.onFailure() }
-  render() { return this.state.failed ? null : this.props.children }
-}
-
-function SculptureScene({ sport, visible, awake, reduced, saveData }) {
-  const [ready, setReady] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const [activated, setActivated] = useState(false)
-  const markReady = useCallback(() => setReady(true), [])
-  const markFailed = useCallback(() => setFailed(true), [])
-  useEffect(() => {
-    if (!visible || !awake || saveData || reduced) return
-    // Wait until the section is nearby; never put WebGL on the initial page's critical path.
-    const timer = window.setTimeout(() => setActivated(true), 120)
-    return () => window.clearTimeout(timer)
-  }, [visible, awake, saveData, reduced])
-  const enabled = activated && !failed && !saveData && !reduced
-  return <figure className="showcase-scene sculpture-scene" role="img" aria-label={sport.alt} data-sport={sport.id} data-ready={ready && enabled}>
-    <div className="sculpture-poster" aria-hidden="true"><img src={sport.image} alt="" width="800" height="800" loading="lazy" decoding="async" /></div>
-    <SculptureBoundary onFailure={markFailed}><Suspense fallback={null}>{enabled && <SportSculptures sport={sport.id} playing={visible && awake} onReady={markReady} onFailure={markFailed} />}</Suspense></SculptureBoundary>
-    <div className="sculpture-orbit" aria-hidden="true" />
-    <figcaption className="showcase-scene-label" aria-hidden="true">{sport.title}</figcaption>
-  </figure>
-}
+const sports = [
+  { id: 'football', title: 'Football', note: 'Bring your squad. Own the pitch.', image: football, alt: 'Artistic portrait of Ronaldo Nazário controlling a football under emerald and coral lights' },
+  { id: 'cricket', title: 'Cricket', note: 'Every over is a new opportunity.', image: cricket, alt: 'Artistic portrait of Ricky Ponting playing a cricket stroke in a teal kit under cinematic lights' },
+  { id: 'tennis', title: 'Tennis', note: 'Find your rhythm. Make your next serve.', image: tennis, alt: 'Artistic portrait of Roger Federer with a tennis racket under emerald and coral lights' },
+  { id: 'basketball', title: 'Basketball', note: 'Your team. Your court. Your next shot.', image: basketball, alt: 'Artistic portrait of Kobe Bryant dribbling beside a visible basketball hoop and net under emerald and coral lights' },
+]
 
 export default function SportsShowcase() {
   const { t } = useTranslation()
   const host = useRef(null)
   const gesture = useRef(null)
-  const [slide, setSlide] = useState({ index: 0, revision: 0 })
+  const [slide, setSlide] = useState({ index: 0, previous: null, revision: 0 })
   const [visible, setVisible] = useState(false)
   const [awake, setAwake] = useState(!document.hidden)
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -56,6 +37,7 @@ export default function SportsShowcase() {
   const changeSport = direction => {
     setSlide(current => ({
       index: (current.index + direction + sports.length) % sports.length,
+      previous: reduced || saveData ? null : current.index,
       revision: current.revision + 1,
     }))
   }
@@ -95,23 +77,33 @@ export default function SportsShowcase() {
   }, [])
   useEffect(() => {
     if (!moving) return
-    const timer = window.setTimeout(() => setSlide(current => ({ index: (current.index + 1) % sports.length, revision: current.revision + 1 })), 7000)
+    const timer = window.setTimeout(() => setSlide(current => ({ index: (current.index + 1) % sports.length, previous: current.index, revision: current.revision + 1 })), 7000)
     return () => window.clearTimeout(timer)
   }, [moving, slide.index, slide.revision])
+  useEffect(() => {
+    if (slide.previous === null) return
+    const timer = window.setTimeout(() => setSlide(current => ({ ...current, previous: null })), 1100)
+    return () => window.clearTimeout(timer)
+  }, [slide.revision, slide.previous])
   useEffect(() => {
     if (!visible || navigator.connection?.saveData) return
     const next = new Image()
     next.src = sports[(slide.index + 1) % sports.length].image
   }, [visible, slide.index])
-  return <section ref={host} className="sports-showcase cinematic-showcase sculpture-showcase" aria-label={t("Sport spotlight")} aria-roledescription="carousel" aria-keyshortcuts="ArrowLeft ArrowRight" aria-describedby="sports-navigation-hint" tabIndex={0} onKeyDown={handleKeyDown} onTouchStart={startSwipe} onTouchEnd={finishSwipe} onTouchCancel={() => { gesture.current = null }}>
+  return <section ref={host} className="sports-showcase cinematic-showcase" aria-label={t("Sport spotlight")} aria-roledescription="carousel" aria-keyshortcuts="ArrowLeft ArrowRight" aria-describedby="sports-navigation-hint" tabIndex={0} onKeyDown={handleKeyDown} onTouchStart={startSwipe} onTouchEnd={finishSwipe} onTouchCancel={() => { gesture.current = null }}>
     <span id="sports-navigation-hint" className="sr-only">{t("Swipe left or right to change sports. Use the left and right arrow keys when this carousel is focused.")}</span>
     <div className="showcase-info"><p className="sport-section-label">{t("A FIELD FOR EVERY GAME")}</p><h3>{t(sport.title)}</h3><p>{t(sport.note)}</p><span className="showcase-note">{t("Explore the sports available on SportEvo.")}</span>
       <div className="sport-filmstrip" data-moving={moving} aria-label={t("Sports image gallery")}>
         <div className="sport-filmstrip-track">{[false, true].map(duplicate => <div className="sport-filmstrip-group" key={String(duplicate)} aria-hidden={duplicate || undefined}>
-          {sports.map(card => <figure key={card.title} className="sport-image-card" data-active={card.title === sport.title}><img src={card.image} alt={duplicate ? '' : t(card.alt)} loading="lazy" decoding="async" width="800" height="800" /><figcaption>{t(card.title)}</figcaption></figure>)}
+          {sportCards.map(card => <figure key={card.title} className="sport-image-card" data-active={card.title === sport.title}><img src={card.image} alt={duplicate ? '' : t(card.alt)} loading="lazy" decoding="async" width="640" height="427" /><figcaption>{t(card.title)}</figcaption></figure>)}
         </div>)}</div>
       </div>
     </div>
-    <SculptureScene sport={{ ...sport, title: t(sport.title), alt: t(sport.alt) }} visible={visible} awake={awake} reduced={reduced} saveData={saveData} />
+    <figure className={`showcase-scene cinematic-scene ${moving ? 'cinematic-moving' : ''}`} data-sport={sport.id} aria-label={t(sport.title) + ' ' + t('cinematic artwork')}>
+      {slide.previous !== null && <div className="artwork-exit" key={'exit-' + slide.revision} aria-hidden="true"><img src={sports[slide.previous].image} alt="" draggable={false} /></div>}
+      <div className="artwork-entry" key={slide.revision}><img className="artwork-image" src={sport.image} alt={t(sport.alt)} loading="lazy" decoding="async" width="1000" height="1000" draggable={false} /></div>
+      <div className="cinematic-vignette" aria-hidden="true" />
+      <figcaption className="showcase-scene-label">{t(sport.title.toUpperCase())}</figcaption>
+    </figure>
   </section>
 }

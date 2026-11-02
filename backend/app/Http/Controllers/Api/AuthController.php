@@ -13,17 +13,75 @@ use App\Models\Role;
 use App\Models\Turf;
 use App\Models\User;
 use App\Services\TrackedMail;
+use App\Services\GoogleIdentity;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function googleNonce(Request $request, GoogleIdentity $google): JsonResponse
+    {
+        return response()->json(['nonce' => $google->nonce($request)]);
+    }
+
+    public function google(Request $request, GoogleIdentity $google): JsonResponse
+    {
+        $claims = $google->verify($request);
+        $user = User::with('role')->where('google_subject_hash', GoogleIdentity::subjectHash($claims['sub']))->first();
+        if ($user) {
+            abort_unless($user->email_verified_at, 403, 'Verify your SportEvo email before signing in.');
+            $this->startStatefulSession($request, $user);
+            return response()->json(['user' => $this->userPayload($user), ...$this->sessionPayload($request)]);
+        }
+        // Never link an existing account by email alone, including privileged accounts.
+        abort_if(User::whereEmail($claims['email'])->exists(), 409, 'Sign in with your password, then connect Google from My Profile.');
+        $request->session()->put('google_registration', Crypt::encryptString(json_encode($claims + ['expires' => time() + 600], JSON_THROW_ON_ERROR)));
+        return response()->json(['requires_registration' => true, 'email' => $claims['email'], 'name' => $claims['name']]);
+    }
+
+    public function googleRegister(Request $request): JsonResponse
+    {
+        $data = $request->validate(['phone' => ['required', 'string', 'min:7', 'max:20'], 'role' => ['required', 'in:user,turf']]);
+        try {
+            $sealed = $request->hasSession() ? $request->session()->get('google_registration') : null;
+            $claims = $sealed ? json_decode(Crypt::decryptString($sealed), true, 8, JSON_THROW_ON_ERROR) : null;
+        } catch (\Throwable $e) {
+            $claims = null;
+        }
+        abort_unless($claims && $claims['expires'] > time(), 422, 'Google registration expired. Please sign in with Google again.');
+        $user = DB::transaction(function () use ($claims, $data) {
+            abort_if(User::whereEmail($claims['email'])->exists() || User::where('google_subject_hash', GoogleIdentity::subjectHash($claims['sub']))->exists(), 409, 'This account already exists. Please sign in.');
+            $user = User::create(['name' => $claims['name'], 'email' => $claims['email'], 'phone' => $data['phone'],
+                'password' => Hash::make(Str::random(64)), 'role_id' => Role::where('name', $data['role'])->firstOrFail()->id, 'email_verified_at' => now()]);
+            $user->forceFill(['google_subject' => $claims['sub'], 'google_subject_hash' => GoogleIdentity::subjectHash($claims['sub'])])->save();
+            return $user->fresh('role');
+        });
+        $request->session()->forget('google_registration');
+        $this->startStatefulSession($request, $user);
+        return response()->json(['user' => $this->userPayload($user), ...$this->sessionPayload($request)], 201);
+    }
+
+    public function googleLink(Request $request, GoogleIdentity $google): JsonResponse
+    {
+        $claims = $google->verify($request);
+        $user = DB::transaction(function () use ($request, $claims) {
+            $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            abort_unless($user->email_verified_at && hash_equals(User::emailHash($user->email), User::emailHash($claims['email'])), 422, 'Choose the Google account matching your verified SportEvo email.');
+            $hash = GoogleIdentity::subjectHash($claims['sub']);
+            abort_if(($user->google_subject_hash && $user->google_subject_hash !== $hash) || User::where('google_subject_hash', $hash)->whereKeyNot($user->id)->exists(), 409, 'This Google account is already connected.');
+            $user->forceFill(['google_subject' => $claims['sub'], 'google_subject_hash' => $hash])->save();
+            return $user->load('role');
+        });
+        return response()->json(['message' => 'Google account connected.', 'user' => $this->userPayload($user)]);
+    }
+
     public function updateProfile(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -266,6 +324,8 @@ class AuthController extends Controller
             'role' => $user->role?->name,
             'role_id' => $user->role_id,
             'email_verified_at' => $user->email_verified_at,
+            'google_connected' => (bool) $user->google_subject_hash,
+            'needs_complex_registration' => $user->hasRole('turf') && ! Turf::withTrashed()->where('turf_manager_id', $user->id)->exists(),
         ];
     }
 

@@ -85,6 +85,23 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const googleLogin = async credential => {
+    const { data } = await api.post('/auth/google', { credential })
+    if (data.user) { rememberDeadline(data); persistUser(data.user) }
+    return data
+  }
+  const googleRegister = async payload => {
+    const { data } = await api.post('/auth/google/register', payload)
+    if (data.user.role === 'turf') data.user.needs_complex_registration = true
+    rememberDeadline(data); persistUser(data.user)
+    return data
+  }
+  const connectGoogle = async credential => {
+    const { data } = await api.post('/auth/google/link', { credential })
+    persistUser(data.user)
+    return data
+  }
+
   const resendCode = async (email) => {
     const { data } = await api.post('/resend-code', { email })
     return data
@@ -111,7 +128,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, resendCode, logout, deleteAccount, updateProfile, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, googleRegister, connectGoogle, verifyEmail, resendCode, logout, deleteAccount, updateProfile, setUser }}>
       {children}
     </AuthContext.Provider>
   )

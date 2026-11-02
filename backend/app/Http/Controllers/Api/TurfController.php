@@ -16,6 +16,7 @@ use App\Services\AdvancePayment;
 use App\Services\FieldPhotos;
 use App\Services\FieldPricing;
 use App\Services\FieldSports;
+use App\Services\ComplexLocation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,22 @@ class TurfController extends Controller
 {
     public function index(Request $request)
     {
+        return response()->json($this->browseQuery($request)->paginate(min(50, max(1, $request->integer('per_page', 12)))));
+    }
+
+    public function map(Request $request)
+    {
+        $rows = $this->browseQuery($request)->whereNotNull('latitude')->whereNotNull('longitude')->limit(301)->get();
+        return response()->json(['truncated' => $rows->count() > 300, 'data' => $rows->take(300)->map(fn ($turf) => [
+            'id' => $turf->id, 'name' => $turf->name, 'location' => $turf->location,
+            'latitude' => $turf->latitude, 'longitude' => $turf->longitude, 'distance_km' => $turf->distance_km,
+            'fields' => $turf->fields->map(fn ($field) => $field->only(['id', 'name', 'pricing_mode', 'price_per_slot', 'price_per_hour'])),
+        ])->values()]);
+    }
+
+    private function browseQuery(Request $request)
+    {
+        $request->validate(['search' => ['sometimes', 'string', 'max:255'], 'location' => ['sometimes', 'string', 'max:255']]);
         $query = Turf::with(['fields.sports', 'photos' => fn ($q) => $q->limit(1)])->where('is_approved', true)->whereHas('fields')
             ->withCount(['reviews' => fn ($q) => $q->where('is_hidden', false)])
             ->withAvg(['reviews' => fn ($q) => $q->where('is_hidden', false)], 'rating');
@@ -45,7 +62,8 @@ class TurfController extends Controller
             $query->where('location', 'like', "%{$request->location}%");
         }
 
-        return response()->json($query->paginate(min(50, max(1, $request->integer('per_page', 12)))));
+        ComplexLocation::filter($query, $request);
+        return $query;
     }
 
     public function show(Turf $turf)
@@ -64,7 +82,7 @@ class TurfController extends Controller
             User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             abort_if(Turf::withTrashed()->where('turf_manager_id', $request->user()->id)->exists(), 409, 'Each owner account can register one complex. Use a separate account for another complex.');
             $pricing = FieldPricing::attributes($request->validated());
-            $turf = Turf::create($request->only(['name', 'email', 'phone', 'location']) +
+            $turf = Turf::create($request->only(['name', 'email', 'phone', 'location']) + ComplexLocation::attributes($request) +
                 ['price_per_slot' => $pricing['price_per_slot'], 'commission_rate' => 10, 'turf_manager_id' => $request->user()->id, 'is_approved' => false,
                     'advance_enabled' => $request->boolean('advance_enabled', true), 'advance_amount' => $request->input('advance_amount', 500),
                     'advance_window_minutes' => $request->input('advance_window_minutes', 60), 'payment_provider' => $request->payment_provider,
@@ -84,7 +102,7 @@ class TurfController extends Controller
     public function updateMyTurf(UpdateMyTurfRequest $request)
     {
         $turf = Turf::where('turf_manager_id', $request->user()->id)->firstOrFail();
-        $turf->update($request->only(['name', 'email', 'phone', 'location', 'booking_request_emails']));
+        $turf->update($request->only(['name', 'email', 'phone', 'location', 'booking_request_emails']) + ComplexLocation::attributes($request));
 
         return response()->json(['message' => 'Complex updated.', 'turf' => $turf->fresh(['fields.sports', 'fields.photos'])]);
     }
