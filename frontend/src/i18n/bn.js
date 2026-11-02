@@ -1069,6 +1069,12 @@ Featured requests awaiting review|যাচাইয়ের অপেক্ষ
 Slot details|স্লটের বিস্তারিত
 Close slot editor|স্লট সম্পাদনা বন্ধ করুন
 How booking works|বুকিং যেভাবে কাজ করে
+Before your first booking|প্রথম বুকিংয়ের আগে
+Close booking instructions|বুকিংয়ের নির্দেশনা বন্ধ করুন
+Read the steps before sending your first request. No booking is sent until you choose Continue to request.|প্রথম অনুরোধ পাঠানোর আগে ধাপগুলো পড়ুন। অনুরোধ পাঠাতে এগিয়ে যান বেছে নেওয়ার আগে কোনো বুকিংয়ের অনুরোধ পাঠানো হবে না।
+Back to slots|স্লটের তালিকায় ফিরুন
+Continue to request|অনুরোধ পাঠাতে এগিয়ে যান
+This slot is no longer available. Choose another time.|এই স্লট এখন আর খালি নেই। অন্য সময় বেছে নিন।
 How to book|বুকিংয়ের নিয়ম
 Awaiting payment|পেমেন্টের অপেক্ষায়
 Open requests|চালু অনুরোধ

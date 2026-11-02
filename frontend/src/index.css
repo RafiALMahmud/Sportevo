@@ -706,3 +706,12 @@ body { font-family: 'Manrope Variable', sans-serif; }
 :root[data-theme="light"] .booking-guide-steps > button[aria-pressed="true"], :root[data-theme="light"] .booking-guide-detail { background: #deefe4; color: #173f29; }
 :root[data-theme="light"] .booking-guide-detail > :is(span,b) { color: #315f41; }
 @media (max-width: 599px) { .booking-guide-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }.booking-guide > header { padding: 12px 14px; }.booking-guide-body { padding: 4px 14px 18px; }.booking-guide-steps > button { min-height: 100px; padding: 12px; }.booking-guide-toggle { font-size: 17px; }.booking-guide-detail { padding: 16px; } }
+.booking-guide-dialog { width: min(94vw,880px); max-width: calc(100vw - 20px); max-height: 90vh; max-height: 90dvh; padding: 0; margin: auto; border: 1px solid #477456; border-radius: 18px; background: #0b1e15; color: #d9efdf; overflow-y: auto; overscroll-behavior: contain; }
+.booking-guide-dialog::backdrop { background: #020906cc; }
+.booking-guide-dialog-content { padding: 22px; }.booking-guide-dialog-content > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.booking-guide-dialog h2 { font-size: 24px; font-weight: 700; color: #edfff3; }.booking-guide-dialog-content > p { line-height: 1.7; margin-bottom: 16px; }
+.booking-guide-dialog-content > header > button, .booking-guide-dialog footer > button { min-height: 44px; border: 1px solid #67967a; border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.booking-guide-dialog footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; padding-top: 20px; }.booking-guide-selection { font-weight: 600; }
+.booking-guide-dialog button:focus-visible { outline: 3px solid #ff977f; outline-offset: 3px; }
+:root[data-theme="light"] .booking-guide-dialog { background: #f3faf5; color: #234f33; border-color: #7fa88d; }:root[data-theme="light"] .booking-guide-dialog h2 { color: #173f29; }
+@media (max-width: 599px) { .booking-guide-dialog-content { padding: 14px; }.booking-guide-dialog h2 { font-size: 20px; }.booking-guide-dialog footer > button { flex: 1; } }

@@ -191,7 +191,7 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 foreach (['users' => ['google_subject','google_subject_hash'], 'turfs' => ['latitude','longitude'], 'bookings' => ['is_peak','advance_required'], 'fields' => ['players_per_side'], 'featured_requests' => ['amount','receiver_number','status'], 'featured_placements' => ['starts_at','ends_at','is_enabled'], 'featured_settings' => ['payment_details']] as $table => $fields) {
     foreach ($fields as $column) if (!Illuminate\Support\Facades\Schema::hasColumn($table,$column)) throw new RuntimeException('Required schema column missing.');
 }
-foreach ([['/api/auth/google','POST','AuthController@google'],['/api/auth/google/nonce','GET','AuthController@googleNonce'],['/api/auth/google/register','POST','AuthController@googleRegister'],['/api/auth/google/link','POST','AuthController@googleLink'],['/api/turfs/map','GET','TurfController@map'],['/api/locations/search','GET','PlaceSearchController']] as [$url,$method,$action]) {
+foreach ([['/api/auth/google','POST','AuthController@google'],['/api/auth/google/nonce','GET','AuthController@googleNonce'],['/api/auth/google/register','POST','AuthController@googleRegister'],['/api/auth/google/link','POST','AuthController@googleLink'],['/api/turfs/map','GET','TurfController@map'],['/api/locations/search','GET','PlaceSearchController'],['/api/booking-guide','GET','BookingController@guide']] as [$url,$method,$action]) {
     $route = $app['router']->getRoutes()->match(Illuminate\Http\Request::create($url,$method));
     if (!str_contains($route->getActionName(),$action)) throw new RuntimeException('Required map/auth route missing.');
 }

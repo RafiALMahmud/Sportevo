@@ -81,6 +81,7 @@ Route::middleware(['auth:sanctum', ValidateSessionVersion::class])->group(functi
 
     // Booking requests (authenticated users)
     Route::middleware('role:user')->group(function () {
+        Route::get('/booking-guide', [BookingController::class, 'guide'])->middleware('throttle:30,1');
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings', [BookingController::class, 'myBookings']);
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);

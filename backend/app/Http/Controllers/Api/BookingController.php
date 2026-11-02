@@ -22,6 +22,12 @@ class BookingController extends Controller
 {
     public function __construct(private BookingNotificationService $notifications) {}
 
+    public function guide(Request $request)
+    {
+        $hasHistory = Booking::where('user_id', $request->user()->id)->whereNot('status', 'available')->exists();
+        return response()->json(['required' => ! $hasHistory], 200, ['Cache-Control' => 'private, no-store']);
+    }
+
     public function store(BookSlotRequest $request)
     {
         abort_unless(filled($request->user()->phone), 422, 'Add your phone number in My Profile before requesting a slot.');

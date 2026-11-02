@@ -83,6 +83,26 @@ class AdvancePaymentTest extends TestCase
         return $fixture;
     }
 
+    public function test_first_booking_guide_uses_only_the_signed_in_customers_history(): void
+    {
+        [, $customer, , , $slot] = $this->fixture();
+        $this->actingAs($customer)->getJson('/api/booking-guide?user_id=999')->assertOk()->assertExactJson(['required' => true])
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->requestSlot($customer, $slot)->assertCreated();
+        $this->getJson('/api/booking-guide')->assertOk()->assertExactJson(['required' => false]);
+        $slot->update(['status' => 'rejected']);
+        $this->getJson('/api/booking-guide')->assertOk()->assertExactJson(['required' => false]);
+        $this->actingAs($this->person())->getJson('/api/booking-guide')->assertOk()->assertExactJson(['required' => true]);
+    }
+
+    public function test_first_booking_guide_is_private_and_customer_only(): void
+    {
+        $this->getJson('/api/booking-guide')->assertUnauthorized();
+        foreach (['turf', 'admin', 'superadmin'] as $role) {
+            $this->actingAs($this->person($role))->getJson('/api/booking-guide')->assertForbidden();
+        }
+    }
+
     public function test_phone_is_required_for_signup_profile_and_legacy_customer_booking(): void
     {
         $payload = ['name' => 'Customer', 'email' => 'new@example.test', 'password' => 'password123', 'password_confirmation' => 'password123'];

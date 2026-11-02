@@ -3,7 +3,7 @@ import { slotCrossesMidnight } from '../utils/slotTime'
 import { FieldPlayersLabel } from '../components/FieldPlayers'
 import { money } from '../utils/money'
 import { fieldRate } from '../utils/fieldPricing'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -11,6 +11,7 @@ import Spinner from '../components/Spinner'
 import Seo from '../components/Seo'
 import FieldGallery from '../components/FieldGallery'
 import Badge from '../components/Badge'
+import BookingGuideDialog from '../components/BookingGuideDialog'
 import { Alert, Button, Card, Input } from '../components/ui'
 
 
@@ -25,6 +26,8 @@ export default function TurfDetail() {
   const fieldId = selectedFieldId || ''
   const [refreshSlots, setRefreshSlots] = useState(0)
   const [requesting, setRequesting] = useState(false)
+  const [guideSlot, setGuideSlot] = useState(null)
+  const guideTrigger = useRef(null)
   const field = turf?.fields?.find((f) => String(f.id) === String(fieldId))
   const photos = field?.photos || []
   const [date, setDate] = useState(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10))
@@ -72,11 +75,18 @@ export default function TurfDetail() {
     [turf, user]
   )
 
-  const requestSlot = async (slot) => {
+  const requestSlot = async (slot, guideRead = false) => {
     if (user?.role !== 'user') return
     setRequesting(true)
     setError(''); setMessage('')
-    try { const { data } = await api.post('/bookings', { turf_id: turf.id, field_id: slot.field_id, start_time: slot.start_time, end_time: slot.end_time }); setMessage(data.message); setSlots(current => current.map(item => item.id === slot.id ? { ...item, status: 'pending', display_status: 'in_process', can_request: false } : item)); setRefreshSlots((n) => n + 1) }
+    try {
+      if (!guideRead) {
+        const { data } = await api.get('/booking-guide')
+        if (data.required) { setGuideSlot(slot); return }
+      }
+      setGuideSlot(null)
+      const { data } = await api.post('/bookings', { turf_id: turf.id, field_id: slot.field_id, start_time: slot.start_time, end_time: slot.end_time }); setMessage(data.message); setSlots(current => current.map(item => item.id === slot.id ? { ...item, status: 'pending', display_status: 'in_process', can_request: false } : item)); setRefreshSlots((n) => n + 1)
+    }
     catch (err) { setError(err.response?.data?.message || 'Could not send your request.') }
     finally { setRequesting(false) }
   }
@@ -113,6 +123,11 @@ export default function TurfDetail() {
   const canReview = user?.role === 'user' && reviewable.length > 0
 
   return <div className="space-y-7 animate-fade-up">
+    <BookingGuideDialog open={Boolean(guideSlot)} returnFocus={guideTrigger} onClose={() => setGuideSlot(null)} onContinue={() => {
+      const current = slots.find(slot => slot.id === guideSlot?.id && slot.status === 'available' && slot.can_request !== false)
+      if (!current) { setGuideSlot(null); setError('This slot is no longer available. Choose another time.'); return }
+      requestSlot(current, true)
+    }} selection={guideSlot ? `${field.name} · ${new Intl.DateTimeFormat(locale, { timeZone: 'Asia/Dhaka', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(guideSlot.start_time))}` : ''} />
     <Seo
       title={`${field.name} - ${turf.name}`}
       description={t("{value0} — {value1}. View prices, photos, reviews and available time slots, then request your game.", { value0: turf.name, value1: turf.location })}
@@ -144,7 +159,7 @@ export default function TurfDetail() {
         {slotCrossesMidnight(slot) && <p className="text-xs text-zinc-400">{t('Ends next day')}</p>}{slot.is_peak && <p className="text-xs text-emerald-300">{t('Peak hours')}</p>}
         <p className="text-sm text-emerald-300">{money(slot.price ?? field?.price_per_slot)}</p><Badge status={slot.display_status || slot.status} />
         {turf.advance_enabled && slot.status === 'available' && <p className="text-xs text-zinc-400">{t('Advance payment')}: {money(Math.min(Number(turf.advance_amount), Number(slot.price ?? field?.price_per_slot)))}</p>}
-        {user?.role === 'user' && slot.status === 'available' && slot.can_request !== false && <Button className="w-full !px-2 !py-1.5 text-xs" disabled={requesting || !user.phone} onClick={() => requestSlot(slot)}>{t('Request slot')}</Button>}
+        {user?.role === 'user' && slot.status === 'available' && slot.can_request !== false && <Button className="w-full !px-2 !py-1.5 text-xs" disabled={requesting || !user.phone} onClick={event => { guideTrigger.current = event.currentTarget; event.currentTarget.focus({ preventScroll: true }); requestSlot(slot) }}>{t('Request slot')}</Button>}
       </div>)}</div>
       {!slots.length && <p className="mt-5 text-center text-zinc-500">{t("No slots for this date")}</p>}</Card>
     <section className="space-y-4">
