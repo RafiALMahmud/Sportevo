@@ -1,12 +1,18 @@
 # Free maps and Google sign-in
 
-Implemented 2 November 2026 for the GitHub code release. This does not deploy the changes to Hostinger.
+Published on Hostinger on 2 November 2026, including the same-day follow-up for in-map place search and blank directory filters. Activation verified the unchanged existing-record fingerprints, the public directory request, place-search route validation and JavaScript delivery. A real production place lookup returned five valid Bangladesh results.
 
 ## Maps: no card or Google Maps key
 
 The final implementation uses self-hosted Leaflet 1.9.4 and OpenStreetMap's standard raster tiles. Google Maps JavaScript was replaced at the owner's request after its live API returned `BillingNotEnabledMapError`. The Google Maps loader and key are no longer used or included in builds.
 
 The `/explore` page supports name, area, sport and Other sport filters, browser location with consent, 5/10/25/50/100 km radii, nearest-first results, clicking a map point to search around it, and Search this area after panning/zooming. Clicking a complex pin opens its name, configured field pricing and View fields link. Pagination and search areas persist in the URL. Map/list toggles reuse the map. Missing location permission and tile/network failures retain list search. The homepage, directory and navbar link to map search. Complex pages offer a directions link.
+
+**Search on map** is built into the map itself in both `/explore` and the owner's registration/profile pin picker. Type an area or public place and press Enter or Find place, then choose a result. Customer maps move to that area and search nearby using the selected radius, retaining name/sport filters while clearing any old text-location restriction. Owner maps place an adjustable pin at the result; owners still save the surrounding form to persist it. Search never submits the complex form or replaces its name/address/contact details. Empty, busy and unavailable results leave manual map selection usable. English/Bangla interface text and light/dark styling are included.
+
+The backend proxies public-place lookups through [Photon's public service](https://github.com/komoot/photon#demo-server), using OpenStreetMap data. Requests happen only on explicit search, with a shared lock, a conservative global request gate, a 10/minute/IP limit and seven-day result caching; typing never makes provider requests. Results are restricted to Bangladesh and returned as a small name/coordinate DTO. Attribution is visible in the map search bar. The public demo is intended for reasonable usage and offers no availability guarantee; at higher traffic switch to a suitable Photon instance through `PLACE_SEARCH_URL` in the private backend environment and refresh config. No browser API key or Google billing is used. Search terms are sent to the provider; use public place/area names rather than confidential information.
+
+The same follow-up corrects the initial directory regression: `/turfs` sends empty optional search/location filters, which Laravel converts to null. Those filters now accept null and return all eligible complexes instead of HTTP 422. Invalid non-string filters remain rejected. The deployment helper verifies this exact public request after activation.
 
 Owners choose and drag a pin during registration or from My Profile. Coordinate entry is also available. Latitude/longitude must be valid and provided together; clearing both removes a pin, while omitting both preserves it. Existing complexes have null coordinates until their owners set a pin and remain in ordinary directory results. Public map pins include only approved, active complexes with active fields and coordinates; no customer, owner contact or payment data is included. Results are capped at 300 pins with a zoom-in notice. Slot, price, booking, advance-payment and deletion rules remain unchanged.
 
@@ -36,7 +42,7 @@ VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 ```
 
-Client IDs are public identifiers. A client secret is not required by this flow and must never go in a `VITE_` variable. Restrict origins to the actual development/production sites. The local configuration uses the replacement Client ID provided by the owner; production configuration has not been uploaded to Hostinger.
+Client IDs are public identifiers. A client secret is not required by this flow and must never go in a `VITE_` variable. Restrict origins to the actual development/production sites. The initial Hostinger activation installed the replacement client ID supplied by the owner, matching the local frontend/backend configuration.
 
 Install locked PHP/JS dependencies, apply `2026_11_02_000001_add_google_identity_and_complex_coordinates.php`, rebuild frontend assets, and refresh Laravel config/views as part of a coordinated backend/frontend deployment. The migration adds nullable pin/identity fields and does not reset data or alter encryption keys. Its rollback refuses to discard existing pins or Google connections. Local migration has been applied. Do not publish only the frontend to an older backend.
 
@@ -51,3 +57,5 @@ Security headers permit first-party geolocation, Google sign-in frames/resources
 Backend tests cover signed/invalid/expired/replayed identity tokens, account linking and role preservation, mandatory phones and both signup roles, real session cookies, deleted-account identifier reuse, encrypted/expired pending signup, certificate caching/outage handling, nearby ordering/pagination, map bounds and DTO privacy, pin ownership/validation/clear behavior and CSP/permissions headers. Browser fixtures cover phone/desktop Chromium/WebKit map interactions and filters, pagination, map reuse, light/dark themes, Bangla, both signup roles, owner onboarding/contact prefills/pin selection and existing-account conflicts.
 
 Google's real sign-in iframe loads with the configured client. Automated tests use signed test tokens and provider fixtures; a real person's Google consent/login requires manual validation. No customer or booking records are modified by the automated tests. Composer and npm dependency audits were checked and affected existing dependencies patched.
+
+The place-search follow-up passes 184 backend tests / 1,666 assertions, a production build, lint (existing warnings), and a 996-entry Bangla audit with zero missing literal translations. New coverage includes caching, Bangladesh-only results, validation, shared provider limits/locks, upstream failures and the exact blank-directory-filter regression. Chromium/WebKit at phone/desktop widths verify both map search flows, Enter inside the owner form, adjustable pins, customer area/radius/filter changes, themes, Bangla and failure fallbacks. A real local backend lookup returned valid Bangladesh place results from Photon.

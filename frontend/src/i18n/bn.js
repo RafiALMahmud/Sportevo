@@ -1004,4 +1004,15 @@ This account already exists. Please sign in.|এই অ্যাকাউন্�
 Choose the Google account matching your verified SportEvo email.|আপনার যাচাই করা SportEvo ইমেইলের সঙ্গে মেলা গুগল অ্যাকাউন্ট বেছে নিন।
 This Google account is already connected.|এই গুগল অ্যাকাউন্ট আগে থেকেই যুক্ত আছে।
 Choose either a nearby search or a map area.|কাছাকাছি খোঁজ অথবা মানচিত্রের এলাকা বেছে নিন।
+Search on map|মানচিত্রে খুঁজুন
+Search an area or place in Bangladesh|বাংলাদেশের এলাকা বা জায়গা খুঁজুন
+Find place|জায়গা খুঁজুন
+Searching places...|জায়গা খোঁজা হচ্ছে...
+Places found|পাওয়া জায়গাগুলো
+Place search:|জায়গা অনুসন্ধান:
+Choose a result to move the map.|মানচিত্রে যেতে একটি ফলাফল বেছে নিন।
+No places found. Try another name or choose a point on the map.|কোনো জায়গা পাওয়া যায়নি। অন্য নাম লিখুন অথবা মানচিত্রে জায়গা বেছে নিন।
+Place search is busy. Please try again in a few seconds.|জায়গা অনুসন্ধান এখন ব্যস্ত। কয়েক সেকেন্ড পরে আবার চেষ্টা করুন।
+Place search is unavailable. You can still choose a point on the map.|জায়গা অনুসন্ধান এখন চালু নেই। মানচিত্রে জায়গা বেছে নিতে পারবেন।
+Map moved to the selected place. Adjust the pin or map if needed.|নির্বাচিত জায়গায় মানচিত্র নেওয়া হয়েছে। প্রয়োজনে পিন বা মানচিত্র সরিয়ে ঠিক করুন।
 `.trim().split('\n').map(line => { const split = line.indexOf('|'); return [line.slice(0, split).trim(), line.slice(split + 1).trim()] }))

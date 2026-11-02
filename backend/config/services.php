@@ -2,6 +2,10 @@
 
 return [
 
+    'places' => [
+        'url' => env('PLACE_SEARCH_URL', 'https://photon.komoot.io/api/'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
     ],

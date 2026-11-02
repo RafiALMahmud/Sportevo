@@ -32,7 +32,7 @@ if ($name -notmatch '^\.sportevo-maps-auth-[a-f0-9]{32}$' -or $state.sha256 -not
 if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $state.sha256) { throw 'Prepared archive changed; prepare a fresh release.' }
 if ($PrepareOnly) { Write-Output 'MAPS_AUTH_PACKAGE_READY'; return }
 Write-Host 'Enter your Hostinger SSH password for upload and activation.'
-Write-Host 'This publishes free OpenStreetMap search and Google signup for customers and owners.'
+Write-Host 'This publishes map place search for both owners and customers, plus free maps and Google signup.'
 Write-Host 'Dependencies are installed privately before maintenance. Existing records, uploads, SMTP credentials and encryption keys are preserved.'
 Write-Host 'Only GOOGLE_CLIENT_ID is added/updated in production configuration. No Google Maps billing or client secret is used.'
 $exitCode = 0
@@ -185,7 +185,7 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 foreach (['users' => ['google_subject','google_subject_hash'], 'turfs' => ['latitude','longitude'], 'bookings' => ['is_peak','advance_required'], 'fields' => ['players_per_side']] as $table => $fields) {
     foreach ($fields as $column) if (!Illuminate\Support\Facades\Schema::hasColumn($table,$column)) throw new RuntimeException('Required schema column missing.');
 }
-foreach ([['/api/auth/google','POST','AuthController@google'],['/api/auth/google/nonce','GET','AuthController@googleNonce'],['/api/auth/google/register','POST','AuthController@googleRegister'],['/api/auth/google/link','POST','AuthController@googleLink'],['/api/turfs/map','GET','TurfController@map']] as [$url,$method,$action]) {
+foreach ([['/api/auth/google','POST','AuthController@google'],['/api/auth/google/nonce','GET','AuthController@googleNonce'],['/api/auth/google/register','POST','AuthController@googleRegister'],['/api/auth/google/link','POST','AuthController@googleLink'],['/api/turfs/map','GET','TurfController@map'],['/api/locations/search','GET','PlaceSearchController']] as [$url,$method,$action]) {
     $route = $app['router']->getRoutes()->match(Illuminate\Http\Request::create($url,$method));
     if (!str_contains($route->getActionName(),$action)) throw new RuntimeException('Required map/auth route missing.');
 }
@@ -206,6 +206,11 @@ php artisan up
 entry=$(php -r '$m=json_decode(file_get_contents($argv[1]),true); echo $m["index.html"]["file"];' "$public/build/manifest.json")
 content_type=$(curl -fsS --max-time 20 -o /dev/null -w '%{content_type}' "https://sportevo.games/build/$entry?deploy_check=$(date +%s)")
 case "$content_type" in *javascript*) echo ENTRY_HTTP_JAVASCRIPT_VERIFIED ;; *) echo ENTRY_HTTP_CHECK_FAILED; exit 1 ;; esac
+api_type=$(curl -fsS --max-time 20 -H 'Accept: application/json' -o /dev/null -w '%{content_type}' 'https://sportevo.games/api/turfs?page=1&search=&sport=&sport_name=&location=')
+case "$api_type" in *application/json*) echo PUBLIC_DIRECTORY_EMPTY_FILTERS_VERIFIED ;; *) echo DIRECTORY_HTTP_CHECK_FAILED; exit 1 ;; esac
+validation_status=$(curl -sS --max-time 20 -H 'Accept: application/json' -o /dev/null -w '%{http_code}' 'https://sportevo.games/api/locations/search?q=ab')
+test "$validation_status" = 422 || { echo PLACE_SEARCH_ROUTE_HTTP_CHECK_FAILED; exit 1; }
+echo PLACE_SEARCH_PUBLIC_VALIDATION_VERIFIED
 touch "$stage/activation-complete"
 trap - EXIT HUP INT TERM
 echo MAPS_AUTH_UPDATE_COMPLETE

@@ -636,3 +636,23 @@ body { font-family: 'Manrope Variable', sans-serif; }
 :root[data-theme="light"] :is(.map-search-form,.map-actions,.google-registration) :is(input,select) { background: #fff; color: #173d29; border-color: #9bbcaa; }
 :root[data-theme="light"] :is(.map-search-form,.map-actions,.google-registration) input::placeholder { color: #586e61; }
 :root[data-theme="light"] :is(.map-search-form,.map-actions,.google-registration) label { color: #294d38; }
+.map-viewport { position: relative; min-height: 320px; }
+.map-place-search { padding: 14px; border-bottom: 1px solid #407157; background: #0b2119; color: #edfff4; }
+.map-place-search > label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
+.map-place-search-row { display: flex; gap: 8px; }
+.map-place-search input { flex: 1; min-width: 0; width: 100%; padding: 11px; border: 1px solid #619579; border-radius: 9px; background: #07160f; color: #edfff4; font: inherit; font-size: 16px; }
+.map-place-search input::placeholder { color: #a6c9b6; opacity: 1; }
+.map-place-search button { min-height: 44px; padding: 10px 14px; border: 1px solid #619579; border-radius: 9px; background: #164b34; color: #edfff4; cursor: pointer; font-size: 14px; font-weight: 600; }
+.map-place-search button:hover { background: #206443; border-color: #a5ebc5; }
+.map-place-search button:disabled { opacity: .55; cursor: default; }
+.map-place-search :is(input,button):focus-visible { outline: 2px solid #ff977f; outline-offset: 2px; }
+.map-place-search > p { margin-top: 8px; font-size: 13px; line-height: 1.5; color: #c5dfd0; }
+.map-place-search > ul { display: grid; gap: 6px; max-height: 230px; overflow-y: auto; margin: 10px 0; list-style: none; }
+.map-place-search li button { display: block; width: 100%; text-align: start; overflow-wrap: anywhere; }
+.map-place-search > small { display: block; margin-top: 9px; font-size: 11px; color: #bad0c2; }
+.map-place-search a { color: inherit; text-decoration: underline; }
+:root[data-theme="light"] .map-place-search { background: #f0f8f3; color: #143523; border-color: #a1c5ad; }
+:root[data-theme="light"] .map-place-search input { background: #fff; color: #143523; border-color: #739d84; }
+:root[data-theme="light"] .map-place-search input::placeholder { color: #526f5e; }
+:root[data-theme="light"] .map-place-search > :is(p,small) { color: #395846; }
+@media (max-width: 480px) { .map-place-search-row { flex-wrap: wrap; } .map-place-search input, .map-place-search-row > button { flex-basis: 100%; } }

@@ -55,10 +55,11 @@ export default function MapSearch() {
       .catch(e => { if (e.code !== 'ERR_CANCELED') { setPins([]); setMapError('Unable to load map pins. List search is still available.') } })
     return () => controller.abort()
   }, [query])
-  const spatial = useCallback(values => {
+  const spatial = useCallback((values, clearLocation = false) => {
     setParams(current => {
       const next = new URLSearchParams(current)
       geoKeys.forEach(key => next.delete(key)); next.delete('page'); next.delete('near')
+      if (clearLocation) next.delete('location')
       Object.entries(values).forEach(([key, value]) => next.set(key, String(value)))
       return next
     })
@@ -96,7 +97,7 @@ export default function MapSearch() {
     {center && <p>{t('Sorted by approximate straight-line distance. Your location is used for this search only.')}</p>}
     {error && <Alert message={error} />}
     <div className={view === 'map' ? 'map-results-layout' : ''}>
-      <div className="map-panel" hidden={view !== 'map'}><ComplexMap center={center} bounds={bounds} points={pins} onArea={bounds => spatial(bounds)} onPoint={position => spatial({ ...position, radius_km: radius })} onSelect={setSelected} />
+      <div className="map-panel" hidden={view !== 'map'}><ComplexMap center={center} bounds={bounds} points={pins} onArea={bounds => spatial(bounds)} onPoint={position => spatial({ ...position, radius_km: radius })} onPlace={place => { setLocation(''); spatial({ lat: place.lat, lng: place.lng, radius_km: radius }, true) }} onSelect={setSelected} />
         <p className="map-help">{t('Tap a pin to view a complex. Tap elsewhere to search nearby, or move the map and choose Search this area.')}</p>
         {selected && <div className="map-selected-complex"><strong>{selected.name}</strong><p>{selected.location}</p><p>{complexRateLabel(selected)}</p><Link to={'/turfs/' + selected.id}>{t('View fields')}</Link></div>}
         {mapError && <Alert message={mapError} />}{truncated && <p>{t('Showing up to 300 pins. Zoom in and search this area for more detail.')}</p>}

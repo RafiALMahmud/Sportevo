@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FieldController;
 use App\Http\Controllers\Api\IssueReportController;
 use App\Http\Controllers\Api\OperationsController;
+use App\Http\Controllers\Api\PlaceSearchController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TurfController;
 use App\Http\Controllers\Api\WorkflowController;
@@ -33,6 +34,7 @@ Route::middleware('throttle:auth')->group(function () {
 });
 
 Route::get('/auth/google/nonce', [AuthController::class, 'googleNonce'])->middleware('throttle:20,1');
+Route::get('/locations/search', PlaceSearchController::class)->middleware('throttle:10,1');
 
 // Public turf browsing (home page & guests)
 Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');

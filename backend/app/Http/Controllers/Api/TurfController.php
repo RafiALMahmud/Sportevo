@@ -42,7 +42,7 @@ class TurfController extends Controller
 
     private function browseQuery(Request $request)
     {
-        $request->validate(['search' => ['sometimes', 'string', 'max:255'], 'location' => ['sometimes', 'string', 'max:255']]);
+        $request->validate(['search' => ['sometimes', 'nullable', 'string', 'max:255'], 'location' => ['sometimes', 'nullable', 'string', 'max:255']]);
         $query = Turf::with(['fields.sports', 'photos' => fn ($q) => $q->limit(1)])->where('is_approved', true)->whereHas('fields')
             ->withCount(['reviews' => fn ($q) => $q->where('is_hidden', false)])
             ->withAvg(['reviews' => fn ($q) => $q->where('is_hidden', false)], 'rating');

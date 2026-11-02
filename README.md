@@ -1,8 +1,8 @@
 # SportEvo
 
-2 November 2026 code release: [card-free Leaflet/OpenStreetMap search and Google signup/sign-in](MAPS-AND-GOOGLE-SIGN-IN.md), including customer/owner signup and owner onboarding. Google Maps billing is not required. Hostinger deployment is separate.
+Published 2 November 2026: [card-free Leaflet/OpenStreetMap search and Google signup/sign-in](MAPS-AND-GOOGLE-SIGN-IN.md), including customer/owner signup and owner onboarding. The same-day follow-up is also live: **Search on map** in customer and owner maps, plus the repair for empty directory filters.
 
-Local follow-up, 27 October 2026: [sports gallery artwork restored](SPORTS-3D.md). The large display uses the previous player pictures and cinematic transitions, while the rolling strip keeps its original sports equipment pictures. The 3D gallery prototype remains inactive in source. This restoration is included in the 2 November GitHub code release; it has not been deployed to Hostinger.
+Published with the 2 November deployment: [sports gallery artwork restored](SPORTS-3D.md). The large display uses the previous player pictures and cinematic transitions, while the rolling strip keeps its original sports equipment pictures. The 3D gallery prototype remains inactive in source.
 
 Published follow-up, 26 October 2026: navbar complex search is live and verified. Desktop uses a search icon; the phone menu contains a search field. Queries and filters persist in directory URLs across pagination, Back and refresh.
 

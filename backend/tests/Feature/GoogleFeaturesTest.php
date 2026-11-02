@@ -176,6 +176,16 @@ class GoogleFeaturesTest extends TestCase
         $this->getJson('/api/turfs?lat=23.8&lng=90.4&radius_km=1')->assertOk()->assertJsonPath('total', 1);
     }
 
+    public function test_blank_directory_filters_return_complexes_instead_of_validation_errors(): void
+    {
+        $turf = $this->complex(23.8, 90.4);
+        $filters = '?page=1&search=&sport=&sport_name=&location=';
+        $this->getJson('/api/turfs'.$filters)->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.id', $turf->id);
+        $this->getJson('/api/turfs/map'.$filters)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $turf->id);
+        $this->getJson('/api/turfs?search[]=invalid')->assertUnprocessable();
+        $this->getJson('/api/turfs?location[]=invalid')->assertUnprocessable();
+    }
+
     public function test_map_bounds_and_name_filters_use_private_data_free_pins(): void
     {
         $inside = $this->complex(23.8, 90.4); $this->complex(25, 91); $this->complex(null, null);

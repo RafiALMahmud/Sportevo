@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import { useTranslation } from '../i18n/useTranslation'
+import MapPlaceSearch from './MapPlaceSearch'
 
 const bdBounds = [[20.3, 88], [26.7, 92.8]]
 const noPoints = []
-export default function ComplexMap({ points = noPoints, center, bounds, onPoint, onArea, onSelect, label = 'Sports complexes map' }) {
+export default function ComplexMap({ points = noPoints, center, bounds, onPoint, onArea, onSelect, onPlace, disabled = false, label = 'Sports complexes map' }) {
   const { t } = useTranslation()
   const host = useRef(null)
   const callbacks = useRef(null)
-  useEffect(() => { callbacks.current = { onPoint, onArea, onSelect } }, [onPoint, onArea, onSelect])
+  useEffect(() => { callbacks.current = { onPoint, onArea, onSelect, onPlace } }, [onPoint, onArea, onSelect, onPlace])
   const [engine, setEngine] = useState(null)
   const [error, setError] = useState('')
   const [tilesFailed, setTilesFailed] = useState(false)
@@ -35,7 +36,7 @@ export default function ComplexMap({ points = noPoints, center, bounds, onPoint,
     }).catch(() => { if (active) setError('Unable to load the map. You can still use the list.') })
     return () => { active = false; observer?.disconnect(); instance?.remove() }
   }, [])
-  useEffect(() => { if (engine && center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) engine.map.setView([center.lat, center.lng], 12) }, [engine, center])
+  useEffect(() => { if (engine && center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) engine.map.setView([center.lat, center.lng], draggable ? 16 : 12) }, [engine, center, draggable])
   useEffect(() => { if (engine && bounds) engine.map.fitBounds([[bounds.south, bounds.west], [bounds.north, bounds.east]]) }, [engine, bounds])
   useEffect(() => {
     if (!engine) return
@@ -50,11 +51,19 @@ export default function ComplexMap({ points = noPoints, center, bounds, onPoint,
     return () => markers.forEach(marker => marker.remove())
   }, [engine, points, draggable, t])
   return <div className="map-shell">
+    <MapPlaceSearch disabled={disabled} onSelect={place => {
+      const position = { lat: place.lat, lng: place.lng }
+      engine?.map.setView([place.lat, place.lng], draggable ? 16 : 12)
+      if (callbacks.current.onPlace) callbacks.current.onPlace(place)
+      else callbacks.current.onPoint?.(position)
+    }} />
+    <div className="map-viewport">
     {error ? <p className="map-error" role="status">{t(error)}</p> : <><div ref={host} className="complex-map" role="region" aria-label={t(label)} />{!engine && <p className="map-loading" role="status">{t('Loading map…')}</p>}
       {onArea && engine && <button type="button" className="map-area-button" onClick={() => {
         const bounds = engine.map.getBounds()
         callbacks.current.onArea?.({ north: bounds.getNorth(), south: bounds.getSouth(), west: bounds.getWest(), east: bounds.getEast() })
       }}>{t('Search this area')}</button>}</>}
     {tilesFailed && <p className="map-tile-status" role="status">{t('Map tiles are unavailable. You can still select pins or use the list.')}</p>}
+    </div>
   </div>
 }
