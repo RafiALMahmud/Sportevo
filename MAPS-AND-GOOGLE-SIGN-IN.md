@@ -40,6 +40,10 @@ Client IDs are public identifiers. A client secret is not required by this flow 
 
 Install locked PHP/JS dependencies, apply `2026_11_02_000001_add_google_identity_and_complex_coordinates.php`, rebuild frontend assets, and refresh Laravel config/views as part of a coordinated backend/frontend deployment. The migration adds nullable pin/identity fields and does not reset data or alter encryption keys. Its rollback refuses to discard existing pins or Google connections. Local migration has been applied. Do not publish only the frontend to an older backend.
 
+The coordinated Hostinger helper is `scripts/update-hostinger-maps-auth.ps1`. Run it with `-PrepareOnly` to build and validate the private archive, then `-UsePrepared` in an interactive PowerShell window to upload and activate that exact archive. Enter SSH passwords only in that window. If upload succeeds but activation fails, inspect `backend/storage/logs/hostinger-maps-auth-update.log` before using `-Resume`, which targets the saved upload rather than building a different release. A failed upload requires `-UsePrepared` again.
+
+The helper installs locked production PHP dependencies in a private staging directory before maintenance, saves the previous code/vendor/build/environment, fingerprints existing account and financial records, applies only the new migration, and changes only the production Google client ID. It retains old hashed frontend assets and checks JavaScript MIME types to prevent the previous blank-page deployment failure. Failed activation attempts restore the prior code, vendor, manifest and environment; additive schema columns remain. No seeders, database resets, test accounts or test emails run against production. Public map/auth behavior must be verified after successful activation.
+
 Security headers permit first-party geolocation, Google sign-in frames/resources and the OSM tile host. Scripts use per-response Vite CSP nonces and strict-dynamic; inline scripts and unsafe-eval remain disallowed. Cross-Origin-Opener-Policy permits the sign-in popup. API CSP remains restricted.
 
 ## Validation
