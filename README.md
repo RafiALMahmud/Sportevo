@@ -1,28 +1,18 @@
-# Sportevo
+# SportEvo
 
-> Multi-sport turf discovery, slot reservations and facility-management dashboards.
+[Live platform](https://sportevo.games) · [Backend setup](#setup-backend) · [Frontend setup](#setup-frontend)
 
-![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white) ![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat-square&logo=laravel&logoColor=white) ![React](https://img.shields.io/badge/React-149ECA?style=flat-square&logo=react&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+SportEvo is a national Bangladesh turf and sports-complex booking platform with customer, owner, and admin roles. It supports English and Bangla, BDT pricing, and a commission-wallet model.
 
-**[GitHub repository](https://github.com/RafiALMahmud/Sportevo)** · [Backend setup](#setup-backend) · [Frontend setup](#setup-frontend) · [Roles and permissions](#roles--permissions-rbac) · [API reference](#main-api-endpoints)
+**Stack:** Laravel 12 + Sanctum, React 19 + Vite + Tailwind, and MySQL.
 
-A full-stack web application for booking multi-sport turfs. Users browse registered turfs, book time slots, and manage reservations. Turf managers register facilities, generate slots, and view schedules. Admins and Superadmins oversee the platform.
+## What I built
 
-| For players | For facility owners | For platform admins |
-|---|---|---|
-| Browse turfs and request slots | Register complexes and manage schedules | Review complexes and booking requests |
-| Manage reservations and reviews | Accept or reject requests | Manage commissions and settlements |
+I built the booking, owner-management, and admin workflows, including encrypted personal data, queued email, and 116 PHPUnit tests.
 
-**Try it locally:** follow the [backend](#setup-backend) and [frontend](#setup-frontend) setup instructions. No verified public demo URL is listed in this README.
+## Run locally
 
----
-
-## Tech Stack
-
-**Backend** — PHP 8.x + Laravel 12 + Laravel Sanctum (RESTful API)
-**Frontend** — React 19 + Vite + Tailwind CSS v4 + React Router 7 + Axios
-**Database** — SQLite (default) / MySQL (configure via `.env`)
-
+Follow the backend and frontend setup instructions below. The live site is available at [sportevo.games](https://sportevo.games).
 ## Project Structure
 
 ```
